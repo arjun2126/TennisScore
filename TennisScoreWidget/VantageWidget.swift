@@ -2,7 +2,7 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
-struct TennisScoreWidget: Widget {
+struct VantageWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: MatchAttributes.self) { context in
             // LOCK SCREEN

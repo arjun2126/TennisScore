@@ -12,12 +12,12 @@ struct PlayerProfileView: View {
     private var totalWins: Int { playerMatches.filter { $0.winnerName == player.name }.count }
     private var winRate: Double { playerMatches.isEmpty ? 0 : (Double(totalWins) / Double(playerMatches.count)) * 100 }
     private var allPoints: [PointEvent] { playerMatches.flatMap { $0.pointEvents }.filter { $0.player == player } }
-
+    
     var body: some View {
         ZStack {
-            Color.courtDark.ignoresSafeArea()
+            DesignSystem.Colors.courtDark.ignoresSafeArea()
             ScrollView {
-                VStack(spacing: 25) {
+                VStack(spacing: DesignSystem.Spacing.xl) {
                     headerSection
                     dnaSection
                     historySection
@@ -27,11 +27,17 @@ struct PlayerProfileView: View {
                         dismiss()
                     } label: {
                         Label("Delete Player Profile", systemImage: "trash")
-                            .font(.footnote).bold().padding().foregroundStyle(.red)
+                            .font(DesignSystem.Typography.labelMedium)
+                            .bold()
+                            .padding(.vertical, DesignSystem.Spacing.md)
+                            .frame(maxWidth: .infinity)
+                            .foregroundStyle(DesignSystem.Colors.error)
                     }
-                    .padding(.top, 20)
+                    .buttonStyle(SecondaryButtonStyle(color: DesignSystem.Colors.error))
+                    .padding(.top, DesignSystem.Spacing.lg)
                 }
-                .padding(.vertical)
+                .padding(.vertical, DesignSystem.Spacing.lg)
+                .padding(.horizontal, DesignSystem.Layout.screenPadding)
             }
         }
         .navigationTitle(player.name)
@@ -39,58 +45,127 @@ struct PlayerProfileView: View {
     }
     
     private var headerSection: some View {
-        VStack(spacing: 20) {
-            VStack(spacing: 4) {
-                Text("CAREER ANALYTICS").font(.caption).bold().tracking(3).foregroundStyle(Color.mintAccent)
-                Text(player.name).font(.system(size: 28, weight: .black)).foregroundStyle(.white)
-            }.frame(maxWidth: .infinity, alignment: .center)
-            HStack(spacing: 20) {
+        VStack(spacing: DesignSystem.Spacing.lg) {
+            VStack(spacing: DesignSystem.Spacing.xs) {
+                Text("CAREER ANALYTICS")
+                    .font(DesignSystem.Typography.captionSmall)
+                    .bold()
+                    .tracking(3)
+                    .foregroundStyle(DesignSystem.Colors.mintAccent)
+                Text(player.name)
+                    .font(DesignSystem.Typography.displayMedium)
+                    .bold()
+                    .foregroundStyle(.white)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            
+            HStack(spacing: DesignSystem.Spacing.md) {
                 statItem(label: "MATCHES", value: "\(playerMatches.count)")
                 statItem(label: "WINS", value: "\(totalWins)")
                 statItem(label: "WIN RATE", value: String(format: "%.1f%%", winRate))
             }
-            .padding().background(Color.black.opacity(0.4)).clipShape(RoundedRectangle(cornerRadius: 20)).overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.mintAccent.opacity(0.3), lineWidth: 1))
-        }.padding(.horizontal)
+            .padding(DesignSystem.Spacing.lg)
+            .background(DesignSystem.Colors.courtMid)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.xl))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.Radius.xl)
+                    .stroke(DesignSystem.Colors.mintAccent.opacity(0.3), lineWidth: 1)
+            )
+        }
     }
     
     private var dnaSection: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            Text("POINT DNA").font(.caption).bold().tracking(2).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("POINT DNA")
+                .font(DesignSystem.Typography.captionSmall)
+                .bold()
+                .tracking(2)
+                .foregroundStyle(DesignSystem.Colors.gray500)
+            
             Chart {
-                BarMark(x: .value("Type", "Aces"), y: .value("Count", count(for: .ace))).foregroundStyle(.yellow)
-                BarMark(x: .value("Type", "Winners"), y: .value("Count", events(for: .winner).count)).foregroundStyle(.green)
-                BarMark(x: .value("Type", "Forced E"), y: .value("Count", events(for: .forcedError).count)).foregroundStyle(.blue)
-                BarMark(x: .value("Type", "Unforced E"), y: .value("Count", events(for: .unforcedError).count)).foregroundStyle(.red)
+                BarMark(x: .value("Type", "Aces"), y: .value("Count", count(for: .ace)))
+                    .foregroundStyle(DesignSystem.Colors.warning.gradient)
+                BarMark(x: .value("Type", "Winners"), y: .value("Count", events(for: .winner).count))
+                    .foregroundStyle(DesignSystem.Colors.success.gradient)
+                BarMark(x: .value("Type", "Forced E"), y: .value("Count", events(for: .forcedError).count))
+                    .foregroundStyle(DesignSystem.Colors.info.gradient)
+                BarMark(x: .value("Type", "Unforced E"), y: .value("Count", events(for: .unforcedError).count))
+                    .foregroundStyle(DesignSystem.Colors.error.gradient)
             }
-            .frame(height: 150).foregroundStyle(.white).chartYAxis(.hidden)
-            Text("Yellow: Aces | Green: Winners | Blue: Forced | Red: Unforced").font(.system(size: 10)).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity)
+            .frame(height: 180)
+            .chartYAxis(.hidden)
+            .chartXAxis {
+                AxisMarks { _ in
+                    AxisValueLabel()
+                        .font(DesignSystem.Typography.captionSmall)
+                        .foregroundStyle(DesignSystem.Colors.gray500)
+                }
+            }
+            
+            Text("Yellow: Aces  |  Green: Winners  |  Blue: Forced  |  Red: Unforced")
+                .font(DesignSystem.Typography.captionSmall)
+                .foregroundStyle(DesignSystem.Colors.gray500)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
         }
-        .padding().background(Color.white.opacity(0.05)).clipShape(RoundedRectangle(cornerRadius: 20)).padding(.horizontal)
+        .padding(DesignSystem.Spacing.lg)
+        .background(DesignSystem.Colors.glassBackground)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.xl))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.Radius.xl)
+                .stroke(DesignSystem.Colors.glassBorder, lineWidth: 1)
+        )
     }
     
     private var historySection: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            Text("MATCH HISTORY").font(.caption).bold().tracking(2).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("MATCH HISTORY")
+                .font(DesignSystem.Typography.captionSmall)
+                .bold()
+                .tracking(2)
+                .foregroundStyle(DesignSystem.Colors.gray500)
+            
             ForEach(playerMatches.sorted(by: { $0.date > $1.date })) { match in
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("\(match.playerOne.name) vs \(match.playerTwo.name)").font(.subheadline).foregroundStyle(.white)
-                        Text(match.setScores).font(.caption).foregroundStyle(.secondary)
+                HStack(spacing: DesignSystem.Spacing.md) {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Text("\(match.playerOne.name) vs \(match.playerTwo.name)")
+                            .font(DesignSystem.Typography.bodySmall)
+                            .foregroundStyle(.white)
+                        Text(match.setScores)
+                            .font(DesignSystem.Typography.captionMedium)
+                            .foregroundStyle(DesignSystem.Colors.gray500)
                     }
                     Spacer()
-                    Text(match.winnerName == player.name ? "WON" : "LOST").font(.caption2).bold().padding(.horizontal, 8).padding(.vertical, 4).background(match.winnerName == player.name ? Color.mintAccent.opacity(0.2) : Color.red.opacity(0.2)).foregroundStyle(match.winnerName == player.name ? Color.mintAccent : .red).clipShape(Capsule())
+                    Text(match.winnerName == player.name ? "WON" : "LOST")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .bold()
+                        .padding(.horizontal, DesignSystem.Spacing.sm)
+                        .padding(.vertical, DesignSystem.Spacing.xxxs)
+                        .background((match.winnerName == player.name ? DesignSystem.Colors.mintAccent : DesignSystem.Colors.error).opacity(0.2))
+                        .foregroundStyle(match.winnerName == player.name ? DesignSystem.Colors.mintAccent : DesignSystem.Colors.error)
+                        .clipShape(Capsule())
                 }
-                .padding().background(Color.black.opacity(0.3)).clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(DesignSystem.Spacing.md)
+                .background(DesignSystem.Colors.courtMid)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
             }
-        }.padding(.horizontal)
+        }
     }
     
     private func statItem(label: String, value: String) -> some View {
-        VStack {
-            Text(value).font(.title2).bold().foregroundStyle(.white)
-            Text(label).font(.caption2).bold().foregroundStyle(.secondary)
-        }.frame(maxWidth: .infinity)
+        VStack(spacing: DesignSystem.Spacing.xxxs) {
+            Text(value)
+                .font(DesignSystem.Typography.headlineLarge)
+                .bold()
+                .foregroundStyle(.white)
+            Text(label)
+                .font(DesignSystem.Typography.captionSmall)
+                .bold()
+                .foregroundStyle(DesignSystem.Colors.gray500)
+        }
+        .frame(maxWidth: .infinity)
     }
+    
     private func count(for outcome: PointOutcome) -> Int { allPoints.filter { $0.outcome == outcome }.count }
     private func events(for outcome: PointOutcome) -> [PointEvent] { allPoints.filter { $0.outcome == outcome } }
 }

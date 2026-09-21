@@ -1,6 +1,6 @@
 //
-//  TennisScoreWidgetControl.swift
-//  TennisScoreWidget
+//  VantageWidgetControl.swift
+//  VantageWidget
 //
 //  Created by Arjun Subramanya on 2026-09-11.
 //
@@ -9,8 +9,8 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-struct TennisScoreWidgetControl: ControlWidget {
-    static let kind: String = "TennisScore.TennisScore.TennisScoreWidget"
+struct VantageWidgetControl: ControlWidget {
+    static let kind: String = "Vantage.Vantage.VantageWidget"
 
     var body: some ControlWidgetConfiguration {
         AppIntentControlConfiguration(
@@ -30,7 +30,7 @@ struct TennisScoreWidgetControl: ControlWidget {
     }
 }
 
-extension TennisScoreWidgetControl {
+extension VantageWidgetControl {
     struct Value {
         var isRunning: Bool
         var name: String
@@ -38,12 +38,12 @@ extension TennisScoreWidgetControl {
 
     struct Provider: AppIntentControlValueProvider {
         func previewValue(configuration: TimerConfiguration) -> Value {
-            TennisScoreWidgetControl.Value(isRunning: false, name: configuration.timerName)
+            VantageWidgetControl.Value(isRunning: false, name: configuration.timerName)
         }
 
         func currentValue(configuration: TimerConfiguration) async throws -> Value {
             let isRunning = true // Check if the timer is running
-            return TennisScoreWidgetControl.Value(isRunning: isRunning, name: configuration.timerName)
+            return VantageWidgetControl.Value(isRunning: isRunning, name: configuration.timerName)
         }
     }
 }

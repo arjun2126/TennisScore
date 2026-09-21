@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  TennisScoreWatch Watch App
+//  Vantage Watch
 //
 //  Created by Arjun Subramanya on 2026-09-13.
 //

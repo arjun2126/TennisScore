@@ -12,12 +12,30 @@
 		<key>TennisScoreWatch Watch App.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>2</integer>
+			<integer>1</integer>
 		</dict>
 		<key>TennisScoreWidgetExtension.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>1</integer>
+			<integer>2</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>34116A543055EEF300FA1188</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>34E314713054387E00696E97</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>34E31541305462DE00696E97</key>
+		<dict>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

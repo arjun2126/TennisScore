@@ -2,8 +2,8 @@ import WidgetKit
 import SwiftUI
 
 @main
-struct TennisScoreWidgetBundle: WidgetBundle {
+struct VantageWidgetBundle: WidgetBundle {
     var body: some Widget {
-        TennisScoreWidget()
+        VantageWidget()
     }
 }

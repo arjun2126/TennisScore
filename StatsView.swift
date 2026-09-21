@@ -14,30 +14,48 @@ struct StatsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.courtDark.ignoresSafeArea()
+                DesignSystem.Colors.courtDark.ignoresSafeArea()
                 ScrollView {
-                    VStack(spacing: 25) {
+                    VStack(spacing: DesignSystem.Spacing.xl) {
                         GlobalStatsHeader(matches: matches, playersCount: players.count)
                         
-                        TextField("Search Players...", text: $searchText)
-                            .padding(12)
-                            .background(Color.white.opacity(0.1))
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .padding(.horizontal)
+                        // Search Field
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundStyle(DesignSystem.Colors.gray500)
+                                .accessibilityHidden(true)
+                            TextField("Search Players...", text: $searchText)
+                                .font(DesignSystem.Typography.bodyMedium)
+                                .foregroundStyle(.white)
+                        }
+                        .padding(DesignSystem.Spacing.md)
+                        .background(DesignSystem.Colors.courtMid)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.md))
+                        .padding(.horizontal, DesignSystem.Layout.screenPadding)
+                        .accessibilityLabel("Search players")
+                        .accessibilityHint("Enter a player name to filter the list")
                         
-                        Text("PLAYER PROFILES").font(.caption).bold().tracking(2).foregroundStyle(.white.opacity(0.6)).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
+                        // Section Header
+                        Text("PLAYER PROFILES")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .bold()
+                            .tracking(2)
+                            .foregroundStyle(DesignSystem.Colors.gray500)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, DesignSystem.Layout.screenPadding)
                         
-                        VStack(spacing: 15) {
+                        // Player Cards
+                        VStack(spacing: DesignSystem.Spacing.md) {
                             ForEach(filteredPlayers) { player in
                                 NavigationLink(destination: PlayerProfileView(player: player, matches: matches)) {
                                     PlayerPerformanceCard(player: player, matches: matches)
                                 }
-                                .buttonStyle(PlainButtonStyle()).padding(.horizontal)
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
+                        .padding(.horizontal, DesignSystem.Layout.screenPadding)
                     }
-                    .padding(.vertical)
+                    .padding(.vertical, DesignSystem.Spacing.lg)
                 }
             }
             .navigationTitle("Performance")
@@ -48,46 +66,111 @@ struct StatsView: View {
 struct GlobalStatsHeader: View {
     let matches: [Match]
     let playersCount: Int
-    var body: some View {
-        HStack(spacing: 15) {
-            statBox(title: "TOTAL MATCHES", value: "\(matches.filter { $0.isCompleted }.count)", color: .mintAccent)
-            statBox(title: "TOTAL PLAYERS", value: "\(playersCount)", color: .blue)
-        }
-        .padding(.horizontal)
+    
+    var completedMatches: Int {
+        matches.filter { $0.isCompleted }.count
     }
-    private func statBox(title: String, value: String, color: Color) -> some View {
-        VStack(spacing: 5) {
-            Text(value).font(.system(size: 28, weight: .black)).foregroundStyle(.white)
-            Text(title).font(.system(size: 10, weight: .bold)).foregroundStyle(color).tracking(1)
+    
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            statBox(title: "TOTAL MATCHES", value: "\(completedMatches)", color: DesignSystem.Colors.mintAccent)
+            statBox(title: "TOTAL PLAYERS", value: "\(playersCount)", color: DesignSystem.Colors.info)
         }
-        .frame(maxWidth: .infinity).padding().background(Color.black.opacity(0.4)).cornerRadius(20)
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(color.opacity(0.4), lineWidth: 1))
+        .padding(.horizontal, DesignSystem.Layout.screenPadding)
+    }
+    
+    private func statBox(title: String, value: String, color: Color) -> some View {
+        VStack(spacing: DesignSystem.Spacing.xs) {
+            Text(value)
+                .font(DesignSystem.Typography.displaySmall)
+                .bold()
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+            Text(title)
+                .font(DesignSystem.Typography.captionSmall)
+                .bold()
+                .tracking(1)
+                .foregroundStyle(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(DesignSystem.Spacing.lg)
+        .background(DesignSystem.Colors.courtMid)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.xl))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.Radius.xl)
+                .stroke(color.opacity(0.4), lineWidth: 1)
+        )
     }
 }
 
 struct PlayerPerformanceCard: View {
     let player: Player
     let matches: [Match]
+    
     var body: some View {
         let playerMatches = matches.filter { $0.playerOne == player || $0.playerTwo == player }
         let wins = playerMatches.filter { $0.winnerName == player.name }.count
         let winRate = playerMatches.isEmpty ? 0 : (Double(wins) / Double(playerMatches.count)) * 100
-        HStack(spacing: 15) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(player.name).font(.headline).foregroundStyle(.white)
-                Text("\(playerMatches.count) Matches").font(.caption2).foregroundStyle(.white.opacity(0.5))
+        
+        return HStack(spacing: DesignSystem.Spacing.sm) {
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                Text(player.name)
+                    .font(DesignSystem.Typography.headlineSmall)
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                Text("\(playerMatches.count) Matches")
+                    .font(DesignSystem.Typography.captionMedium)
+                    .foregroundStyle(DesignSystem.Colors.gray500)
+                    .lineLimit(1)
             }
-            Spacer()
-            HStack(spacing: 10) {
-                Text("\(wins)").bold().foregroundStyle(.white)
-                Text("W").font(.caption2).bold().foregroundStyle(Color.mintAccent)
+            Spacer(minLength: DesignSystem.Spacing.xs)
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xxxs) {
+                    Text("\(wins)")
+                        .font(DesignSystem.Typography.headlineMedium)
+                        .bold()
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                    Text("W")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .bold()
+                        .foregroundStyle(DesignSystem.Colors.mintAccent)
+                        .lineLimit(1)
+                }
+                VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xxxs) {
+                    Text("\(Int(winRate))%")
+                        .font(DesignSystem.Typography.headlineMedium)
+                        .bold()
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                    Text("WIN")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .bold()
+                        .foregroundStyle(DesignSystem.Colors.mintAccent)
+                        .lineLimit(1)
+                }
             }
-            HStack(spacing: 10) {
-                Text("\(Int(winRate))%").bold().foregroundStyle(.white)
-                Text("WIN").font(.caption2).bold().foregroundStyle(Color.mintAccent)
-            }
-            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.white.opacity(0.3))
+            Image(systemName: "chevron.right")
+                .font(DesignSystem.Typography.captionSmall)
+                .foregroundStyle(DesignSystem.Colors.gray300)
+                .accessibilityHidden(true)
         }
-        .padding().background(Color.white.opacity(0.05)).clipShape(RoundedRectangle(cornerRadius: 15)).overlay(RoundedRectangle(cornerRadius: 15).stroke(Color.white.opacity(0.1), lineWidth: 1))
+        .padding(DesignSystem.Spacing.md)
+        .background(DesignSystem.Colors.glassBackground)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.Radius.lg)
+                .stroke(DesignSystem.Colors.glassBorder, lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(player.name), \(playerMatches.count) matches, \(wins) wins, \(Int(winRate)) percent win rate")
+        .accessibilityHint("Tap to view detailed profile")
+        .accessibilityAddTraits(.isButton)
     }
 }

@@ -3,35 +3,62 @@ import SwiftData
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var showingManagePlayers = false
+    @AppStorage("matchRemindersEnabled") private var matchRemindersEnabled = false
     @State private var showingInstructions = false
     @State private var showingDeleteAll = false
     
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.courtDark.ignoresSafeArea()
+                DesignSystem.Colors.courtDark.ignoresSafeArea()
                 List {
-                    Section(header: Text("Management").foregroundStyle(.white)) {
-                        Button { showingManagePlayers = true } label: {
-                            Label("Manage Player Book", systemImage: "person.badge.plus")
-                        }
+                    Section {
                         Button { showingInstructions = true } label: {
                             Label("Instructions", systemImage: "questionmark.circle")
+                                .font(DesignSystem.Typography.bodyMedium)
                         }
+                        .accessibilityLabel("View instructions")
+                        .accessibilityHint("Open the onboarding guide")
+                        
+                        Toggle(isOn: $matchRemindersEnabled) {
+                            Label("Match Reminders", systemImage: "bell.fill")
+                                .font(DesignSystem.Typography.bodyMedium)
+                        }
+                        .tint(DesignSystem.Colors.mintAccent)
+                        .accessibilityLabel("Enable match reminders")
+                        .accessibilityHint("Weekly reminders to play and check stats")
+                        .onChange(of: matchRemindersEnabled) { _, enabled in
+                            NotificationManager.shared.setMatchReminders(enabled: enabled)
+                        }
+                    } header: {
+                        Text("Management")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .bold()
+                            .foregroundStyle(DesignSystem.Colors.gray500)
+                            .textCase(.uppercase)
                     }
-                    Section(header: Text("Danger Zone").foregroundStyle(.white)) {
+                    
+                    Section {
                         Button(role: .destructive) { showingDeleteAll = true } label: {
                             Label("Clear All Data", systemImage: "trash")
+                                .font(DesignSystem.Typography.bodyMedium)
                         }
+                        .accessibilityLabel("Clear all data")
+                        .accessibilityHint("Permanently delete all players, matches, and statistics")
+                    } header: {
+                        Text("Danger Zone")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .bold()
+                            .foregroundStyle(DesignSystem.Colors.error)
+                            .textCase(.uppercase)
                     }
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
-                .background(Color.courtDark)
+                .background(DesignSystem.Colors.courtDark)
+                .listRowBackground(DesignSystem.Colors.glassBackground)
             }
             .navigationTitle("Settings")
-            .sheet(isPresented: $showingManagePlayers) { ManagePlayersView() }
             .sheet(isPresented: $showingInstructions) { OnboardingView() }
             .alert("Are you sure?", isPresented: $showingDeleteAll) {
                 Button("Cancel", role: .cancel) { }

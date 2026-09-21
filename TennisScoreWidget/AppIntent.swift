@@ -1,6 +1,6 @@
 //
 //  AppIntent.swift
-//  TennisScoreWidget
+//  VantageWidget
 //
 //  Created by Arjun Subramanya on 2026-09-11.
 //

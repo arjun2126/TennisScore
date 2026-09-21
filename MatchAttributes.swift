@@ -11,6 +11,8 @@ struct MatchAttributes: ActivityAttributes {
         var p2Games: Int
         var isTieBreak: Bool
         var status: String
+        var p1Serving: Bool
+        var p2Serving: Bool
     }
     var playerOne: String
     var playerTwo: String
