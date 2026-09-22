@@ -13,12 +13,15 @@ final class Player {
     @Relationship(deleteRule: .nullify, inverse: \Match.playerOne) var matchesAsP1: [Match] = []
     @Relationship(deleteRule: .nullify, inverse: \Match.playerTwo) var matchesAsP2: [Match] = []
 
-    #if os(iOS)
-    /// Tournaments this player is entered in. `Tournament` lives only in the
-    /// iOS app target, so this inverse is gated out of the Watch build (which
-    /// still compiles this file).
+    /// Tournaments this player is entered in. `Tournament.entries` declares the
+    /// `@Relationship` inverse. NOTE: this must NOT live inside a `#if` block —
+    /// properties hidden by any conditional-compilation guard are silently
+    /// omitted from the `@Model` macro's schema metadata in the current
+    /// toolchain, which then fatals resolving the inverse at launch. The watch
+    /// compiles it successfully against its own minimal `Tournament` mirror
+    /// (`TournamentWatchModels.swift`), and never registers tournaments in its
+    /// model container.
     @Relationship(deleteRule: .nullify) var inTournaments: [Tournament] = []
-    #endif
 
     init(name: String) {
         self.name = name
