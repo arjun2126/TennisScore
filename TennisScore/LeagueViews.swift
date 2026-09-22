@@ -18,7 +18,10 @@ struct LeagueListView: View {
                         emptyState
                     } else {
                         ForEach(leagues) { league in
-                            LeagueCard(league: league)
+                            NavigationLink(value: league) {
+                                LeagueCard(league: league)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -36,6 +39,9 @@ struct LeagueListView: View {
                     }
                     .accessibilityLabel("New League")
                 }
+            }
+            .navigationDestination(for: League.self) { league in
+                LeagueDetailView(league: league)
             }
             .sheet(isPresented: $showingCreate) {
                 CreateLeagueSheet(onCreate: createLeague)
@@ -122,6 +128,96 @@ private struct LeagueCard: View {
             RoundedRectangle(cornerRadius: Radius.md)
                 .stroke(Color.glassBorder, lineWidth: 1)
         )
+    }
+}
+
+// MARK: - League Detail (schedule)
+
+struct LeagueDetailView: View {
+    let league: League
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: Spacing.md) {
+                header
+                schedule
+            }
+            .padding(Spacing.md)
+        }
+        .background(Color.courtDark)
+        .navigationTitle(league.name)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var header: some View {
+        HStack(spacing: Spacing.md) {
+            Image(systemName: "calendar")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Color.mintAccent)
+                .frame(width: 40, height: 40)
+                .background(Color.courtMid, in: RoundedRectangle(cornerRadius: Radius.sm))
+
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                Text(league.name)
+                    .font(Typography.headlineSmall)
+                    .foregroundStyle(Color.white)
+                Text("\(league.roster.count) players • \(league.weeks) week\(league.weeks == 1 ? "" : "s")")
+                    .font(Typography.captionSmall)
+                    .foregroundStyle(Color.gray300)
+            }
+            Spacer()
+        }
+        .padding(Spacing.md)
+        .background(Color.courtMid.opacity(0.6), in: RoundedRectangle(cornerRadius: Radius.md))
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.md)
+                .stroke(Color.glassBorder, lineWidth: 1)
+        )
+    }
+
+    private var schedule: some View {
+        VStack(alignment: .leading, spacing: Spacing.lg) {
+            if league.matches.isEmpty {
+                Text("No schedule yet — recreate the league to generate its weekly fixtures.")
+                    .font(Typography.bodySmall)
+                    .foregroundStyle(Color.gray300)
+            } else {
+                ForEach(1...league.weeks, id: \.self) { week in
+                    weekSection(week)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func weekSection(_ week: Int) -> some View {
+        let matches = league.matches.filter { $0.week == week }.sorted { $0.position < $1.position }
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Week \(week)")
+                .font(Typography.labelLarge)
+                .foregroundStyle(Color.mintAccent)
+            ForEach(matches) { match in
+                LeagueMatchRow(match: match)
+            }
+        }
+    }
+}
+
+private struct LeagueMatchRow: View {
+    let match: LeagueMatch
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            Text(match.displayLabel)
+                .font(Typography.bodyMedium)
+                .foregroundStyle(Color.white)
+            Spacer()
+            Text(match.status.title)
+                .font(Typography.captionSmall)
+                .foregroundStyle(match.isCompleted ? Color.success : Color.gray300)
+        }
+        .padding(Spacing.sm)
+        .background(Color.courtMid.opacity(0.6), in: RoundedRectangle(cornerRadius: Radius.sm))
     }
 }
 
