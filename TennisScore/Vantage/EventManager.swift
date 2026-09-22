@@ -306,12 +306,31 @@ enum EventManager {
         guard names.count >= 2 else { return }
         event.matches.forEach { context.delete($0) }
         let size = DrawEngine.bracketSize(for: names.count)
-        let seeded = names.sorted { $0 > $1 } // MVP: join-order as seed; Phase 6 uses rating
+        // Seed strongest-first: confirmed roster ordered by singles rating for
+        // rated events, else join order (Phase 6 rating hook).
+        let rated = event.ratingOn
+        let seeded: [String] = {
+            if rated {
+                let ratings = names.compactMap { name in
+                    playerRating(name: name, context: context).map { (name, $0) }
+                }
+                let ratedNames = ratings.sorted { $0.1.rating > $1.1.rating }.map(\.0)
+                let unrated = names.filter { !ratedNames.contains($0) }
+                return ratedNames + unrated
+            }
+            return names
+        }()
         for (a, b) in DrawEngine.seededPairs(entries: seeded, size: size) {
             guard let a, let b else { continue }
             insertMatch(event, round: 1, a: a, b: b, startDate: event.startDate, context: context)
         }
         try? context.save()
+    }
+
+    @MainActor
+    private static func playerRating(name: String, context: ModelContext) -> GlickoRating? {
+        let descriptor = FetchDescriptor<Player>(predicate: #Predicate { $0.name == name })
+        return (try? context.fetch(descriptor))?.first?.singlesRating
     }
 
     /// Advances a bracket: seeds the previous round's winners into round N.
@@ -337,6 +356,9 @@ enum EventManager {
         match.disputeNote = nil
         match.reportedBy = reporter
         try? context.save()
+        if let event = match.event, event.ratingOn {
+            RatingsManager.recordRatedResult(match: match, event: event, context: context)
+        }
     }
 
     static func flagDispute(_ match: EventMatch, event: Event, note: String, reporter: String, context: ModelContext) {

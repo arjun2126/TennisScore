@@ -45,12 +45,10 @@
 		34E9AC00000000000000B102 /* TennisScore/Vantage/EventManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A102 /* TennisScore/Vantage/EventManager.swift */; };
 		34E9AC00000000000000B103 /* TennisScore/Vantage/EventViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A103 /* TennisScore/Vantage/EventViews.swift */; };
 		34E9AC00000000000000B201 /* TennisScore/Vantage/EventBrowseViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A201 /* TennisScore/Vantage/EventBrowseViews.swift */; };
-
 		34E9AC00000000000000B301 /* TennisScore/Vantage/Payments/PaymentModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A301 /* TennisScore/Vantage/Payments/PaymentModels.swift */; };
-
 		34E9AC00000000000000B302 /* TennisScore/Vantage/Payments/PaymentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A302 /* TennisScore/Vantage/Payments/PaymentStore.swift */; };
-
 		34E9AC00000000000000B303 /* TennisScore/Vantage/Payments/PaymentViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A303 /* TennisScore/Vantage/Payments/PaymentViews.swift */; };
+		34E9AC00000000000000B401 /* TennisScore/RatingsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A401 /* TennisScore/RatingsEngine.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -129,14 +127,11 @@
 		34E9AC00000000000000A102 /* TennisScore/Vantage/EventManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventManager.swift; sourceTree = "<group>"; };
 		34E9AC00000000000000A103 /* TennisScore/Vantage/EventViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventViews.swift; sourceTree = "<group>"; };
 		34E9AC00000000000000A201 /* TennisScore/Vantage/EventBrowseViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventBrowseViews.swift; sourceTree = "<group>"; };
-
 		34E9AC00000000000000A301 /* TennisScore/Vantage/Payments/PaymentModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/Payments/PaymentModels.swift; sourceTree = "<group>"; };
-
 		34E9AC00000000000000A302 /* TennisScore/Vantage/Payments/PaymentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/Payments/PaymentStore.swift; sourceTree = "<group>"; };
-
 		34E9AC00000000000000A303 /* TennisScore/Vantage/Payments/PaymentViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/Payments/PaymentViews.swift; sourceTree = "<group>"; };
-
-		34E9AC00000000000000A304 /* TennisScore/Vantage/Payments/StoreKitConfiguration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = StoreKitConfiguration.storekit; path = TennisScore/Vantage/Payments/StoreKitConfiguration.storekit; sourceTree = "<group>"; };
+		34E9AC00000000000000A304 /* StoreKitConfiguration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = StoreKitConfiguration.storekit; path = TennisScore/Vantage/Payments/StoreKitConfiguration.storekit; sourceTree = "<group>"; };
+		34E9AC00000000000000A401 /* TennisScore/RatingsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/RatingsEngine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -154,12 +149,13 @@
 				LeagueModels.swift,
 				LeagueViews.swift,
 				Vantage/EventBrowseViews.swift,
-				Vantage/Payments/PaymentModels.swift,
-				Vantage/Payments/PaymentStore.swift,
-				Vantage/Payments/PaymentViews.swift,
 				Vantage/EventManager.swift,
 				Vantage/EventModels.swift,
 				Vantage/EventViews.swift,
+				Vantage/Payments/PaymentModels.swift,
+				Vantage/Payments/PaymentStore.swift,
+				Vantage/Payments/PaymentViews.swift,
+				RatingsEngine.swift,
 			);
 			target = 34E314713054387E00696E97 /* TennisScore */;
 		};
@@ -265,7 +261,8 @@
 				34E9AC00000000000000A301 /* TennisScore/Vantage/Payments/PaymentModels.swift */,
 				34E9AC00000000000000A302 /* TennisScore/Vantage/Payments/PaymentStore.swift */,
 				34E9AC00000000000000A303 /* TennisScore/Vantage/Payments/PaymentViews.swift */,
-				34E9AC00000000000000A304 /* TennisScore/Vantage/Payments/StoreKitConfiguration.storekit */,
+				34E9AC00000000000000A304 /* StoreKitConfiguration.storekit */,
+				34E9AC00000000000000A401 /* TennisScore/RatingsEngine.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -476,6 +473,7 @@
 				34E9AC00000000000000B301 /* TennisScore/Vantage/Payments/PaymentModels.swift in Sources */,
 				34E9AC00000000000000B302 /* TennisScore/Vantage/Payments/PaymentStore.swift in Sources */,
 				34E9AC00000000000000B303 /* TennisScore/Vantage/Payments/PaymentViews.swift in Sources */,
+				34E9AC00000000000000B401 /* TennisScore/RatingsEngine.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

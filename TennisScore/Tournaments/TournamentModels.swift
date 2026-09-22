@@ -204,8 +204,7 @@ final class TournamentMatch {
     var loserSetsLost: Int { winnerSetsWon }
 
     private func setsWonBy(_ winnerSide: Bool) -> Int {
-        guard isCompleted, let winner else { return 0 }
-        let winnerName = winnerSide ? winner.name : (winner == playerOne ? playerTwo?.name : playerOne?.name)
+        guard isCompleted else { return 0 }
         let parts = scoreLine.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
         guard !parts.isEmpty else {
             // No score line → infer sets from best-of-3: winner 3-2

@@ -28,6 +28,25 @@ final class Player {
     /// schema-metadata reason documented above `inTournaments`.
     @Relationship(deleteRule: .nullify) var leagues: [League] = []
 
+    // MARK: - Singles rating (Phase 6, Glicko-2)
+
+    // iOS-only scalars: the watch app compiles this same file but never
+    // cross-syncs ratings, and gatewaying them behind `#if !os(watchOS)` keeps
+    // the watch schema clean. These are plain additive scalars (no inverse
+    // relationship anywhere), so a division in persisted schema across targets
+    // is safe — each store only ever sees its own target's rows.
+    #if !os(watchOS)
+    var ratingSingleR: Double = 1500
+    var ratingSingleRD: Double = 350
+    var ratingSingleVol: Double = 0.06
+    var ratingRatedGames: Int = 0
+    /// "junior" | "adult" pool the rating belongs to (updated on rated results).
+    var ratingBandRaw: String = ""
+    /// Applies cross-device UI only; public visibility is a server concern at
+    /// scale, defaulting to private per min-PII.
+    var ratingPublic: Bool = false
+    #endif
+
     init(name: String) {
         self.name = name
         self.dateCreated = .now

@@ -193,7 +193,7 @@ final class TournamentManager {
         if tournament.type == .knockout, let winner = fixture.winner {
             advance(winner: winner, from: fixture, in: tournament)
         }
-        if let champion = tournament.champion {
+        if tournament.champion != nil {
             tournament.isCompleted = true
         }
         try? context.save()

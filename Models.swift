@@ -126,6 +126,17 @@ final class Match {
     var lastPauseDate: Date?
     var isPaused: Bool = false
     var lastSideSwitchGame: Int = 0 // Track last game total when sides switched
+
+    // Singles rating linkage (Phase 6, spec). Additive scalars with defaults —
+    // watch-safe and migration-free. `isRated` marks a match that counted
+    // toward Glicko-2; deltas are the per-player points applied that period.
+    var isRated: Bool = false
+    var ratingDeltaP1: Double = 0
+    var ratingDeltaP2: Double = 0
+    /// "junior" | "adult" band the match was rated in ("" = free play).
+    var ageBandRaw: String = ""
+    /// Source event share token when the match was played from a rated event.
+    var eventID: String = ""
     
     // Undo Stack (stored as JSON)
     var undoStackData: Data = Data()
