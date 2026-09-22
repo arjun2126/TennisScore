@@ -148,6 +148,7 @@
 				LeagueManager.swift,
 				LeagueModels.swift,
 				LeagueViews.swift,
+				RatingsEngine.swift,
 				Vantage/EventBrowseViews.swift,
 				Vantage/EventManager.swift,
 				Vantage/EventModels.swift,
@@ -155,7 +156,6 @@
 				Vantage/Payments/PaymentModels.swift,
 				Vantage/Payments/PaymentStore.swift,
 				Vantage/Payments/PaymentViews.swift,
-				RatingsEngine.swift,
 			);
 			target = 34E314713054387E00696E97 /* TennisScore */;
 		};

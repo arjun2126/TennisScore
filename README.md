@@ -7,19 +7,42 @@ either against the phone's own engine or in a real phone ↔ watch session.
 
 - **Score**: live tennis match scoring — sets, games, points — plus deuce,
   tie-breaks, and best-of-something set lengths.
-- **History**: every completed match, filterable, with a detail view showing
-  players, the score line, and sharing/export of the result.
-- **Stats**: career head-to-head and per-player stats.
 - **Rivals**: player profiles; add anyone you play against.
-- **Profile**: the current user's identity (the "Me" player shown in orange
-  throughout the app).
 - **Tournaments**: single-elimination knockout brackets (seeded or shuffled)
   and round-robin leagues. Scheduled fixtures can be launched into the live
   scorer; knockout results auto-advance the bracket.
+- **Stats**: career head-to-head and per-player stats.
+- **More**: the overflow hub — **Events** (create/manage events,
+  Creator dashboard), **Settings & Profile**.
+- **Creator tools**: create player-created events (tournament, league,
+  ladder, custom), manage them, and record payouts.
+- **Leagues**: round-robin leagues with standings and score sheets.
+- **Skill ratings**: Glicko-2 rating system (`RatingsEngine`).
 - **Apple Watch companion app**: mirrors matches started on the phone, can
   score independently, and drives a HealthKit workout.
-- **Home-screen widget + Live Activity**: an active match is surfaced as a
-  Live Activity / widget via ActivityKit.
+- **Home Screen & Lock Screen widgets**: an active match surfaces as a
+  Live Activity; static **Next Match** (small) and **This Week** (medium)
+  home-screen widgets and **Next Match** / **Upcoming Event** lock-screen
+  accessories show schedule data.
+- **Live Activity**: an active match is surfaced as a Live Activity via ActivityKit.
+
+The app is organized into five top-level tabs: **Score**, **Rivals**, **Tournaments**, **Stats**, and **More**. Creator tools and event management live inside **More**, alongside Settings & Profile.
+
+## Screenshots
+
+<!-- Screenshots will be added here. -->
+
+| Screen | Placeholder |
+|---|---|
+| Score (match scoring) | _todo_ |
+| Rivals (player list) | _todo_ |
+| Tournaments (bracket) | _todo_ |
+| Stats (head-to-head) | _todo_ |
+| More (events / creator) | _todo_ |
+| Next Match widget (small) | _todo_ |
+| This Week widget (medium) | _todo_ |
+| Next Match lock-screen widget | _todo_ |
+| Upcoming Event lock-screen widget | _todo_ |
 
 ## Platform requirements
 
@@ -72,16 +95,14 @@ xcodebuild -project TennisScore.xcodeproj -scheme TennisScore \
 ## Current feature list
 
 - **Score** — full tennis scoring engine (`TennisEngine`), served/set/game UI.
-- **History** — completed matches list + detail, PDF/export via `ExportPDF`.
-- **Stats** — head-to-head and player stats.
 - **Rivals** — player list + profile, `isCurrentUser` "Me" highlighting.
-- **Profile** — onboarding + profile setup flow gated by `UserSessionManager`.
-- **Tournaments** — knockout + round robin creation, live bracket, round-robin
-  standings, launch-into-scorer and auto-advance.
+- **Tournaments** — knockout + round robin creation, live bracket, round-robin standings, launch-into-scorer and auto-advance.
+- **Stats** — head-to-head and player stats.
+- **More** — overflow hub containing **Events** (create/manage events), **Creator** dashboard, and **Settings & Profile**.
+- **Leagues** — round-robin leagues with standings and score sheets.
 - **Settings** — app options (set length, tie-break defaults, etc.).
-- **Watch** — game state over the phone ⇆ watch bridge, HealthKit workouts.
-- **Widget/Live Activity** — `ActivityManager` + `MatchAttributes` power a
-  Live Activity for the active match.
+- **Watch** — game state over the phone ↔ watch bridge, HealthKit workouts.
+- **Widgets / Live Activity** — `ActivityManager` + `MatchAttributes` power a Live Activity; `NextMatchWidget`, `ThisWeekWidget`, `NextMatchLockWidget`, and `UpcomingEventLockWidget` provide Next Match (small / lock-screen), This Week (medium), and Upcoming Event (lock-screen) widgets via `WidgetKit` + shared `WidgetKitHelper` defaults.
 
 ## Known limitations
 
