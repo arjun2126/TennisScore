@@ -136,6 +136,8 @@ private struct LeagueCard: View {
 struct LeagueDetailView: View {
     let league: League
 
+    @State private var scoringMatch: LeagueMatch?
+
     var body: some View {
         ScrollView {
             VStack(spacing: Spacing.md) {
@@ -148,6 +150,11 @@ struct LeagueDetailView: View {
         .background(Color.courtDark)
         .navigationTitle(league.name)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $scoringMatch) { match in
+            LeagueScoreSheet(match: match)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
     }
 
     private var header: some View {
@@ -234,9 +241,110 @@ struct LeagueDetailView: View {
                 .font(Typography.labelLarge)
                 .foregroundStyle(Color.mintAccent)
             ForEach(matches) { match in
-                LeagueMatchRow(match: match)
+                Button {
+                    scoringMatch = match
+                } label: {
+                    LeagueMatchRow(match: match)
+                }
+                .buttonStyle(.plain)
             }
         }
+    }
+}
+
+// MARK: - Score Entry Sheet
+
+struct LeagueScoreSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+
+    let match: LeagueMatch
+
+    @State private var winnerIsP1 = true
+    @State private var setScoresText = ""
+    @State private var showValidationError = false
+
+    private var p1Name: String { match.playerOne?.name ?? "—" }
+    private var p2Name: String { match.playerTwo?.name ?? "—" }
+
+    /// Parses the comma-separated score line as (winnerSets, loserSets).
+    /// Matches the parsing in `LeagueMatch.setsWonBy(_:)`.
+    private var parsed: (winnerSets: Int, loserSets: Int)? {
+        let parts = setScoresText.split(separator: ",")
+        guard !parts.isEmpty else { return nil }
+        var winnerSets = 0
+        var loserSets = 0
+        for part in parts {
+            let scores = part.trimmingCharacters(in: .whitespaces).split(separator: "-")
+            guard scores.count == 2,
+                  let a = Int(scores[0]), let b = Int(scores[1]),
+                  a >= 0, b >= 0, a != b else { return nil }
+            if a > b { winnerSets += 1 } else { loserSets += 1 }
+        }
+        return (winnerSets, loserSets)
+    }
+
+    private var isScoreValid: Bool {
+        guard let p = parsed else { return false }
+        return p.winnerSets > p.loserSets
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Matchup") {
+                    Text(match.displayLabel)
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(Color.white)
+                }
+                Section("Winner") {
+                    Picker("Winner", selection: $winnerIsP1) {
+                        Text(p1Name).tag(true)
+                        Text(p2Name).tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                Section("Set scores") {
+                    TextField("6-4, 6-2", text: $setScoresText)
+                        .keyboardType(.numbersAndPunctuation)
+                    Text("Enter winner‑first scores per set, comma separated.")
+                        .font(Typography.captionSmall)
+                        .foregroundStyle(Color.gray300)
+                    if showValidationError {
+                        Text("Use a valid score line like \"6-4, 6-2\" with the winner leading each set.")
+                            .font(Typography.captionSmall)
+                            .foregroundStyle(Color.orangeAccent)
+                    }
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Color.courtDark)
+            .navigationTitle("Record Result")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { save() }
+                        .disabled(!isScoreValid)
+                }
+            }
+        }
+        .tint(Color.mintAccent)
+        .preferredColorScheme(.dark)
+    }
+
+    private func save() {
+        guard let score = parsed, isScoreValid else {
+            showValidationError = true
+            return
+        }
+        _ = score
+        match.winner = winnerIsP1 ? match.playerOne : match.playerTwo
+        match.setScores = setScoresText.trimmingCharacters(in: .whitespaces)
+        match.statusRaw = LeagueMatchStatus.completed.rawValue
+        try? modelContext.save()
+        dismiss()
     }
 }
 
