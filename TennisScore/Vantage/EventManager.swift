@@ -534,16 +534,16 @@ struct EventDraftConfig {
         switch step {
         case 1:
             if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Name your event." }
+            return nil
+        case 2:
             if maxPlayers < 2 { return "Capacity must be at least 2." }
             if regDeadline > startDate { return "Registration deadline must be before the start date." }
             if endDate < startDate { return "End date must be after the start date." }
             return nil
-        case 2:
+        case 3:
             if skillMin > skillMax { return "Min skill can't exceed max skill." }
             if ageMin > ageMax { return "Min age can't exceed max age." }
             if ageMin < 13 { return "Minimum age is 13." }
-            return nil
-        case 3:
             return nil
         default:
             return nil

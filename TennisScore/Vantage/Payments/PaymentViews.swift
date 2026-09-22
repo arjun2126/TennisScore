@@ -37,11 +37,11 @@ struct CreatorDashboardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DesignSystem.Spacing.md) {
-                    summaryCard
-                    payoutCard
                     if owned.isEmpty {
-                        emptyState
+                        creatorActionCard
                     } else {
+                        if hasPaidRegistrations { earningsCard }
+                        payoutCard
                         perEventCard
                     }
                 }
@@ -74,45 +74,66 @@ struct CreatorDashboardView: View {
         }
     }
 
-    private var summaryCard: some View {
+    private var hasPaidRegistrations: Bool { collectedEntryCents > 0 }
+
+    private var earningsCard: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            Label("Settlement (Path 1 — manual PayPal)", systemImage: "banknote")
+            Label("Earnings", systemImage: "dollarsign.circle.fill")
                 .font(DesignSystem.Typography.labelLarge)
                 .foregroundStyle(DesignSystem.Colors.gray900)
             HStack(spacing: DesignSystem.Spacing.sm) {
-                statTile("Entry fees collected", EventFees.currencyString(collectedEntryCents), icon: "dollarsign.circle.fill")
+                statTile("Gross entry fees", EventFees.currencyString(collectedEntryCents), icon: "dollarsign.circle.fill")
                 statTile("Platform fee", EventFees.currencyString(collectedFeeCents), icon: "percent")
             }
             HStack(spacing: DesignSystem.Spacing.sm) {
-                statTile("Pending payout", EventFees.currencyString(pendingPayoutCents), icon: "clock.fill", highlight: true)
-                statTile("Paid out", EventFees.currencyString(paidOutCents), icon: "checkmark.circle.fill")
-            }
-            Text("Apple holds all purchase revenue in your developer account. This screen tracks what you owe each creator (their entry-fee share); you pay manually via PayPal. Nothing moves money in-app (Cart-Before-Cat).")
-                .font(DesignSystem.Typography.captionMedium)
-                .foregroundStyle(DesignSystem.Colors.gray500)
-            if !owned.isEmpty {
-                ShareLink(item: settlementCSVURL(), preview: SharePreview("vantage-settlement.csv")) {
-                    Label("Export Settlement CSV", systemImage: "square.and.arrow.up")
-                        .font(DesignSystem.Typography.labelLarge)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(SecondaryButtonStyle())
+                statTile("Pending creator amount", EventFees.currencyString(pendingPayoutCents), icon: "clock.fill", highlight: true)
+                statTile("Paid amount", EventFees.currencyString(paidOutCents), icon: "checkmark.circle.fill")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
     }
 
-    private var payoutCard: some View {
-        let payoutsFor = payouts.filter { payout in
+    private var creatorActionCard: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Image(systemName: "sportscourt.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(DesignSystem.Colors.mintAccent)
+            Text("Create your first event")
+                .font(DesignSystem.Typography.headlineSmall)
+                .foregroundStyle(DesignSystem.Colors.gray900)
+            Text("Organize a tournament, league, ladder, or custom event.")
+                .font(DesignSystem.Typography.bodySmall)
+                .foregroundStyle(DesignSystem.Colors.gray500)
+                .multilineTextAlignment(.center)
+            Button {
+                let event = Event(name: "", summary: "", eventType: .tournament)
+                context.insert(event)
+                newEvent = event
+            } label: {
+                Label("Create Event", systemImage: "plus.circle.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+        .padding(.top, DesignSystem.Spacing.xxl)
+    }
+
+    private var payoutsFor: [PayoutRecord] {
+        payouts.filter { payout in
             owned.contains { event in event.shareToken == payout.eventToken }
         }
-        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            Label("Payout history", systemImage: "list.clipboard")
+    }
+
+    private var payoutCard: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            Label("Payouts", systemImage: "list.clipboard")
                 .font(DesignSystem.Typography.labelLarge)
                 .foregroundStyle(DesignSystem.Colors.gray900)
             if payoutsFor.isEmpty {
-                Text("None yet. Use Record Mock Payout once you send money via PayPal.")
+                Text("None yet.")
                     .font(DesignSystem.Typography.bodySmall)
                     .foregroundStyle(DesignSystem.Colors.gray500)
             } else {
@@ -148,14 +169,14 @@ struct CreatorDashboardView: View {
             if pendingPayoutCents > 0 {
                 Divider().overlay(DesignSystem.Colors.glassBorder)
                 Button {
-                    recordMockPayouts()
+                    recordPayouts()
                 } label: {
-                    Label("Record Mock Payout of \(EventFees.currencyString(pendingPayoutCents))", systemImage: "paperplane.fill")
+                    Label("Record payout of \(EventFees.currencyString(pendingPayoutCents))", systemImage: "paperplane.fill")
                         .font(DesignSystem.Typography.labelLarge)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PrimaryButtonStyle())
-                Text("Logs a pending payout entry for each event equal to its collected entry fees, as a stand-in for a manual PayPal transfer.")
+                Text("Logs an internal payout entry for each event equal to its collected entry fees. This is a manual record — it does not transfer money in-app.")
                     .font(DesignSystem.Typography.captionMedium)
                     .foregroundStyle(DesignSystem.Colors.gray500)
             }
@@ -166,9 +187,17 @@ struct CreatorDashboardView: View {
 
     private var perEventCard: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            Label("Per-event breakdown", systemImage: "chart.bar.xaxis")
+            Label("Your events", systemImage: "chart.bar.xaxis")
                 .font(DesignSystem.Typography.labelLarge)
                 .foregroundStyle(DesignSystem.Colors.gray900)
+            if !owned.isEmpty {
+                ShareLink(item: settlementCSVURL(), preview: SharePreview("vantage-settlement.csv")) {
+                    Label("Export settlement CSV", systemImage: "square.and.arrow.up")
+                        .font(DesignSystem.Typography.labelLarge)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
             ForEach(owned) { event in
                 NavigationLink {
                     EventDetailView(event: event)
@@ -200,30 +229,14 @@ struct CreatorDashboardView: View {
         .padding(.vertical, DesignSystem.Spacing.xs)
     }
 
-    private var emptyState: some View {
-        VStack(spacing: DesignSystem.Spacing.md) {
-            Image(systemName: "banknote")
-                .font(.system(size: 44))
-                .foregroundStyle(DesignSystem.Colors.mintAccentDim)
-            Text("No events yet")
-                .font(DesignSystem.Typography.headlineSmall)
-                .foregroundStyle(DesignSystem.Colors.gray900)
-            Text("Create an event with an entry fee, publish it, and paid players will show up here with their fee split.")
-                .font(DesignSystem.Typography.bodySmall)
-                .foregroundStyle(DesignSystem.Colors.gray500)
-                .multilineTextAlignment(.center)
-        }
-        .padding(.top, DesignSystem.Spacing.xxl)
-    }
-
-    private func recordMockPayouts() {
+    private func recordPayouts() {
         for event in owned {
             let entry = EventManager.entryCollectedCents(event)
             if entry > 0 {
                 EventManager.recordPayout(event: event, amountCents: entry, recipient: myName, context: context)
             }
         }
-        toast = "Logged payout entries. Apple holds the money — you send creators via PayPal as normal."
+        toast = "Logged payout entries. Apple holds the money — you pay creators manually outside the app."
     }
 
     // MARK: - Settlement CSV (Phase 8)

@@ -756,6 +756,7 @@ struct CreateEventWizard: View {
                     }
                     .padding(DesignSystem.Spacing.md)
                 }
+                .scrollDismissesKeyboard(.automatic)
                 footer
             }
             .background(DesignSystem.Colors.courtDark)
@@ -896,6 +897,13 @@ struct CreateEventWizard: View {
                     .buttonStyle(.plain)
                 }
             }
+            WizardField(label: "Event name") {
+                TextField("e.g. Saturday Singles", text: $config.name)
+                    .textFieldStyle(.roundedBorder)
+                    .submitLabel(.next)
+                    .accessibilityLabel("Event name")
+                    .accessibilityHint("e.g. Saturday Singles")
+            }
         }
     }
 
@@ -904,10 +912,6 @@ struct CreateEventWizard: View {
             Text("Event details")
                 .font(DesignSystem.Typography.headlineMedium)
                 .foregroundStyle(.white)
-            WizardField(label: "Name") {
-                TextField("Summer Sunshine Classic", text: $config.name)
-                    .textFieldStyle(.roundedBorder)
-            }
             WizardField(label: "Description (optional)") {
                 TextField("Format, vibe, anything players should know", text: $config.summary, axis: .vertical)
                     .lineLimit(3...6)
