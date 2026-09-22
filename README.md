@@ -30,19 +30,6 @@ The app is organized into five top-level tabs: **Score**, **Rivals**, **Tourname
 
 ## Screenshots
 
-<!-- Screenshots will be added here. -->
-
-| Screen | Placeholder |
-|---|---|
-| Score (match scoring) | _todo_ |
-| Rivals (player list) | _todo_ |
-| Tournaments (bracket) | _todo_ |
-| Stats (head-to-head) | _todo_ |
-| More (events / creator) | _todo_ |
-| Next Match widget (small) | _todo_ |
-| This Week widget (medium) | _todo_ |
-| Next Match lock-screen widget | _todo_ |
-| Upcoming Event lock-screen widget | _todo_ |
 
 ## Platform requirements
 
