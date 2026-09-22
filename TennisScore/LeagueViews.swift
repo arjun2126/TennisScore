@@ -2,68 +2,43 @@ import SwiftUI
 import SwiftData
 import Foundation
 
-// MARK: - The Tournament Hub (Command Center)
+// MARK: - League List
 
-/// The "Command Center" tab. Lists every saved tournament with live knockout /
-/// round-robin status, surfaces past champions, and lets the player create a
-/// new bracket. All scoring is delegated to a real, tagged `Match` (launched
-/// through `TournamentManager`) so the existing S‑G‑P live scorer + watch
-/// handshake are reused unchanged.
-struct TournamentView: View {
+struct LeagueListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Tournament.dateCreated, order: .reverse) private var tournaments: [Tournament]
-    @Query(sort: \Player.name) private var players: [Player]
+    @Query(sort: \League.dateCreated, order: .reverse) private var leagues: [League]
 
     @State private var showingCreate = false
-    @State private var showingLeagues = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Spacing.md) {
-                    if tournaments.isEmpty {
+                    if leagues.isEmpty {
                         emptyState
                     } else {
-                        ForEach(tournaments) { tournament in
-                            NavigationLink(value: tournament) {
-                                TournamentCard(tournament: tournament)
-                            }
-                            .buttonStyle(.plain)
+                        ForEach(leagues) { league in
+                            LeagueCard(league: league)
                         }
                     }
                 }
                 .padding(Spacing.md)
             }
             .background(Color.courtDark)
-            .navigationTitle("Tournaments")
+            .navigationTitle("Leagues")
             .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Button {
-                        showingLeagues = true
-                    } label: {
-                        Image(systemName: "calendar")
-                            .foregroundStyle(Color.mintAccent)
-                    }
-                    .accessibilityLabel("Leagues")
+                ToolbarItem(placement: .primaryAction) {
                     Button {
                         showingCreate = true
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .foregroundStyle(Color.mintAccent)
                     }
-                    .accessibilityLabel("New Tournament")
+                    .accessibilityLabel("New League")
                 }
             }
-            .navigationDestination(for: Tournament.self) { tournament in
-                TournamentBracketView(tournament: tournament)
-            }
             .sheet(isPresented: $showingCreate) {
-                CreateTournamentSheet(onCreate: createTournament)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $showingLeagues) {
-                LeagueListView()
+                CreateLeagueSheet(onCreate: createLeague)
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }
@@ -73,20 +48,20 @@ struct TournamentView: View {
 
     private var emptyState: some View {
         VStack(spacing: Spacing.md) {
-            Image(systemName: "trophy.fill")
+            Image(systemName: "calendar.badge.clock")
                 .font(Typography.displaySmall)
                 .foregroundStyle(Color.orangeAccent)
-            Text("No Tournaments Yet")
+            Text("No Leagues Yet")
                 .font(Typography.headlineSmall)
                 .foregroundStyle(Color.white)
-            Text("Create a knockout bracket or a round‑robin league and watch the live S‑G‑P scorer drive it.")
+            Text("Create a season-long round‑robin league and score it week by week.")
                 .font(Typography.bodySmall)
                 .foregroundStyle(Color.gray300)
                 .multilineTextAlignment(.center)
             Button {
                 showingCreate = true
             } label: {
-                Text("Create Tournament")
+                Text("Create League")
                     .font(Typography.labelLarge)
                     .padding(.horizontal, Spacing.lg)
                     .padding(.vertical, Spacing.sm)
@@ -98,58 +73,39 @@ struct TournamentView: View {
         .padding(.vertical, Spacing.xxl)
     }
 
-    // MARK: - Creation
-
-    private func createTournament(name: String, type: TournamentType, setLength: Int, tieBreakLength: Int, seeded: Bool, entryPlayers: [Player]) {
-        TournamentManager.shared.createTournament(
-            name: name,
-            type: type,
-            setLength: setLength,
-            tieBreakLength: tieBreakLength,
-            seeded: seeded,
-            entries: entryPlayers,
-            in: modelContext
-        )
+    private func createLeague(name: String, roster: [Player]) {
+        LeagueManager.shared.createLeague(name: name, roster: roster, in: modelContext)
         showingCreate = false
     }
 }
 
-// MARK: - Tournament Card
+// MARK: - League Card
 
-private struct TournamentCard: View {
-    let tournament: Tournament
-
-    private var championName: String {
-        tournament.champion?.name ?? "—"
-    }
+private struct LeagueCard: View {
+    let league: League
 
     var body: some View {
         HStack(spacing: Spacing.md) {
-            Image(systemName: tournament.type.systemImage)
+            Image(systemName: "calendar")
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Color.mintAccent)
                 .frame(width: 40, height: 40)
                 .background(Color.courtMid, in: RoundedRectangle(cornerRadius: Radius.sm))
 
             VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text(tournament.name)
+                Text(league.name)
                     .font(Typography.headlineSmall)
                     .foregroundStyle(Color.white)
                 HStack(spacing: Spacing.xs) {
-                    Text(tournament.type.title)
+                    Text("\(league.roster.count) players")
                         .font(Typography.captionSmall)
                         .foregroundStyle(Color.gray300)
-                    Text("•")
-                        .foregroundStyle(Color.gray500)
-                    Text("\(tournament.entries.count) players")
-                        .font(Typography.captionSmall)
-                        .foregroundStyle(Color.gray300)
-                    if tournament.isCompleted, let champion = tournament.champion {
+                    if league.weeks > 0 {
                         Text("•")
                             .foregroundStyle(Color.gray500)
-                        Label(champion.name, systemImage: "crown.fill")
+                        Text("\(league.weeks) week\(league.weeks == 1 ? "" : "s")")
                             .font(Typography.captionSmall)
-                            .foregroundStyle(Color.orangeAccent)
+                            .foregroundStyle(Color.gray300)
                     }
                 }
             }
@@ -169,20 +125,16 @@ private struct TournamentCard: View {
     }
 }
 
-// MARK: - Create Tournament Sheet
+// MARK: - Create League Sheet
 
-struct CreateTournamentSheet: View {
+private struct CreateLeagueSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Player.name) private var players: [Player]
 
     @State private var name = ""
-    @State private var type: TournamentType = .knockout
-    @State private var setLength = 6
-    @State private var tieBreakLength = 7
-    @State private var seeded = false
     @State private var selectedPlayers: Set<Player.ID> = []
 
-    let onCreate: (String, TournamentType, Int, Int, Bool, [Player]) -> Void
+    let onCreate: (String, [Player]) -> Void
 
     private var selected: [Player] {
         players.filter { selectedPlayers.contains($0.id) }.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -192,20 +144,12 @@ struct CreateTournamentSheet: View {
         NavigationStack {
             Form {
                 Section("Details") {
-                    TextField("Tournament Name", text: $name)
-                    Picker("Format", selection: $type) {
-                        ForEach(TournamentType.allCases) { option in
-                            Text(option.title).tag(option)
-                        }
-                    }
-                    Stepper("Sets to win: \(setLength)", value: $setLength, in: 2...6)
-                    Stepper("Tie‑break to \(tieBreakLength)", value: $tieBreakLength, in: 7...10)
-                    Toggle("Seeded draw", isOn: $seeded)
+                    TextField("League Name", text: $name)
                 }
 
-                Section("Entries (\(selected.count))") {
+                Section("Roster (\(selected.count))") {
                     ForEach(players) { player in
-                        PlayerEntryRow(player: player, isSelected: selectedPlayers.contains(player.id)) { isOn in
+                        RosterEntryRow(player: player, isSelected: selectedPlayers.contains(player.id)) { isOn in
                             if isOn {
                                 selectedPlayers.insert(player.id)
                             } else {
@@ -222,14 +166,14 @@ struct CreateTournamentSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color.courtDark)
-            .navigationTitle("New Tournament")
+            .navigationTitle("New League")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
-                        onCreate(name, type, setLength, tieBreakLength, seeded, selected)
+                        onCreate(name, selected)
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || selected.count < 2)
                 }
@@ -240,7 +184,7 @@ struct CreateTournamentSheet: View {
     }
 }
 
-private struct PlayerEntryRow: View {
+private struct RosterEntryRow: View {
     let player: Player
     let isSelected: Bool
     let onToggle: (Bool) -> Void

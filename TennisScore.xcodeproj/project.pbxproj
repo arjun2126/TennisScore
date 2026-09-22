@@ -39,6 +39,8 @@
 		34E3159C30546FFF00696E97 /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E3159A30546FFF00696E97 /* WatchBridge.swift */; };
 		34E9AA00000000000000B101 /* LeagueModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A101 /* LeagueModels.swift */; };
 		34E9AA00000000000000B102 /* LeagueWatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A102 /* LeagueWatchModels.swift */; };
+		34E9AA00000000000000B201 /* LeagueManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A201 /* LeagueManager.swift */; };
+		34E9AA00000000000000B202 /* LeagueViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A202 /* LeagueViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +113,8 @@
 		34E3159A30546FFF00696E97 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
 		34E9AA00000000000000A101 /* LeagueModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TennisScore/LeagueModels.swift"; sourceTree = "<group>"; };
 		34E9AA00000000000000A102 /* LeagueWatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TennisScoreWatch Watch App/LeagueWatchModels.swift"; sourceTree = "<group>"; };
+		34E9AA00000000000000A201 /* LeagueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TennisScore/LeagueManager.swift"; sourceTree = "<group>"; };
+		34E9AA00000000000000A202 /* LeagueViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TennisScore/LeagueViews.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -201,6 +205,8 @@
 				34E3159A30546FFF00696E97 /* WatchBridge.swift */,
 				34E9AA00000000000000A101 /* LeagueModels.swift */,
 				34E9AA00000000000000A102 /* LeagueWatchModels.swift */,
+				34E9AA00000000000000A201 /* LeagueManager.swift */,
+				34E9AA00000000000000A202 /* LeagueViews.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -402,6 +408,8 @@
 				34E3159B30546FFF00696E97 /* WatchBridge.swift in Sources */,
 				34E31564000000000000A104 /* DesignSystem.swift in Sources */,
 				34E9AA00000000000000B101 /* LeagueModels.swift in Sources */,
+				34E9AA00000000000000B201 /* LeagueManager.swift in Sources */,
+				34E9AA00000000000000B202 /* LeagueViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
