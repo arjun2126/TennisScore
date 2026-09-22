@@ -20,6 +20,7 @@ struct VantageApp: App {
             League.self, LeagueMatch.self,
             Event.self, EventRegistration.self, EventReport.self,
             PaymentRecord.self, PayoutRecord.self,
+            EventMatch.self,
         ])
         do {
             container = try ModelContainer(for: schema)

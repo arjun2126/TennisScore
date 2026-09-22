@@ -262,6 +262,146 @@ enum EventManager {
         context.insert(payout)
         try? context.save()
     }
+
+    // MARK: Draw & scheduling (Phase 5)
+
+    static func confirmedNames(_ event: Event) -> [String] {
+        joinedRoster(event)
+            .filter { $0.status == .confirmed }
+            .map(\.playerName)
+    }
+
+    private static func insertMatch(_ event: Event, round: Int, a: String, b: String, startDate: Date, context: ModelContext) {
+        let match = EventMatch(
+            event: event,
+            round: round,
+            scheduledAt: startDate.addingTimeInterval(Double(round - 1) * 86400),
+            playerA: a,
+            playerB: b
+        )
+        context.insert(match)
+    }
+
+    /// League/ladder/custom events: full round-robin schedule, one match per
+    /// player per round, spaced daily across the event window.
+    static func generateRoundRobin(_ event: Event, context: ModelContext) {
+        let names = confirmedNames(event)
+        guard names.count >= 2 else { return }
+        event.matches.forEach { context.delete($0) }
+        let rounds = DrawEngine.roundRobinRounds(count: names.count)
+        for (roundIndex, pairs) in rounds.enumerated() {
+            for (aIndex, bIndex) in pairs {
+                guard aIndex < names.count else { continue }
+                guard let bIndex, bIndex < names.count else { continue }
+                insertMatch(event, round: roundIndex + 1, a: names[aIndex], b: names[bIndex], startDate: event.startDate, context: context)
+            }
+        }
+        try? context.save()
+    }
+
+    /// Tournament events: seeded single-elimination round 1 (byes implicitly
+    /// advance but are not scheduled). Seed by skill band when available.
+    static func generateBracket(_ event: Event, context: ModelContext) {
+        let names = confirmedNames(event)
+        guard names.count >= 2 else { return }
+        event.matches.forEach { context.delete($0) }
+        let size = DrawEngine.bracketSize(for: names.count)
+        let seeded = names.sorted { $0 > $1 } // MVP: join-order as seed; Phase 6 uses rating
+        for (a, b) in DrawEngine.seededPairs(entries: seeded, size: size) {
+            guard let a, let b else { continue }
+            insertMatch(event, round: 1, a: a, b: b, startDate: event.startDate, context: context)
+        }
+        try? context.save()
+    }
+
+    /// Advances a bracket: seeds the previous round's winners into round N.
+    static func advanceBracket(_ event: Event, context: ModelContext) -> Bool {
+        let lastRound = event.matches.map(\.round).max() ?? 0
+        let winners = event.matches
+            .filter { $0.round == lastRound && $0.status == .played }
+            .compactMap(\.winnerName)
+        guard winners.count > 1 else { return false }
+        let size = DrawEngine.bracketSize(for: winners.count)
+        for (a, b) in DrawEngine.seededPairs(entries: winners, size: size) {
+            guard let a, let b else { continue }
+            insertMatch(event, round: lastRound + 1, a: a, b: b, startDate: event.startDate, context: context)
+        }
+        try? context.save()
+        return true
+    }
+
+    static func recordResult(_ match: EventMatch, winner: String, scoreLine: String, reporter: String, context: ModelContext) {
+        match.winnerNameRaw = winner
+        match.scoreLineRaw = scoreLine
+        match.statusRaw = EventMatchStatus.played.rawValue
+        match.disputeNote = nil
+        match.reportedBy = reporter
+        try? context.save()
+    }
+
+    static func flagDispute(_ match: EventMatch, event: Event, note: String, reporter: String, context: ModelContext) {
+        match.statusRaw = EventMatchStatus.disputed.rawValue
+        match.disputeNote = note
+        try? context.save()
+        let report = EventReport(
+            eventToken: event.shareToken,
+            eventName: event.name,
+            reason: "Score dispute: \(match.playerAName) vs \(match.playerBName) (\(note))",
+            reporterName: reporter
+        )
+        context.insert(report)
+        try? context.save()
+    }
+}
+
+// MARK: - Live standings (pure, testable)
+
+nonisolated struct StandingRow: Equatable {
+    var name: String
+    var played: Int = 0
+    var wins: Int = 0
+    var losses: Int = 0
+
+    var points: Int { wins * 2 }
+}
+
+enum EventStandings {
+    /// Tallies played (non-disputed) matches. `matches` is a plain tuple list so
+    /// the harness can test this without SwiftData.
+    nonisolated static func compute(matches: [(a: String, b: String, winner: String?)]) -> [StandingRow] {
+        var rows: [String: StandingRow] = [:]
+        func ensure(_ name: String) {
+            if rows[name] == nil { rows[name] = StandingRow(name: name) }
+        }
+        for match in matches {
+            guard let winner = match.winner else { continue }
+            ensure(match.a)
+            ensure(match.b)
+            var winnerRow = rows[winner]
+            var loserRow = rows[winner == match.a ? match.b : match.a]
+
+            winnerRow?.played += 1
+            winnerRow?.wins += 1
+            loserRow?.played += 1
+            loserRow?.losses += 1
+
+            rows[winner] = winnerRow
+            rows[winner == match.a ? match.b : match.a] = loserRow
+        }
+        return rows.values.sorted {
+            if $0.points != $1.points { return $0.points > $1.points }
+            if $0.wins != $1.wins { return $0.wins > $1.wins }
+            return $0.name < $1.name
+        }
+    }
+
+    /// Sugar over the computed rows fed from SwiftData models.
+    static func standings(for event: Event) -> [StandingRow] {
+        let played = event.matches
+            .filter { $0.status == .played }
+            .map { (a: $0.playerAName, b: $0.playerBName, winner: $0.winnerName) }
+        return compute(matches: played)
+    }
 }
 
 // MARK: - Proximity (pure, haversine)

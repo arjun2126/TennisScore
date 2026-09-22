@@ -422,6 +422,126 @@ struct LocationPickerMap: View {
     }
 }
 
+// MARK: - Score entry & disputes (Phase 5)
+
+struct MatchResultSheet: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    let match: EventMatch
+    let event: Event
+
+    @State private var winner: String
+    @State private var scoreLine = ""
+    @State private var hasSaved = false
+
+    init(match: EventMatch, event: Event) {
+        self.match = match
+        self.event = event
+        _winner = State(initialValue: match.winnerName ?? "")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Match") {
+                    Text("\(match.playerAName) vs \(match.playerBName)")
+                        .font(DesignSystem.Typography.headlineSmall)
+                        .foregroundStyle(DesignSystem.Colors.gray900)
+                }
+                Section("Winner") {
+                    Picker("Winner", selection: $winner) {
+                        Text(match.playerAName).tag(match.playerAName)
+                        Text(match.playerBName).tag(match.playerBName)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                Section("Score (optional)") {
+                    TextField("e.g. 6-4 6-3", text: $scoreLine)
+                        .keyboardType(.numbersAndPunctuation)
+                }
+                Section {
+                    Button {
+                        EventManager.recordResult(
+                            match,
+                            winner: winner,
+                            scoreLine: scoreLine.trimmingCharacters(in: .whitespaces),
+                            reporter: EventManager.currentPlayerName(context: context),
+                            context: context
+                        )
+                        hasSaved = true
+                        dismiss()
+                    } label: {
+                        Text(match.isPlayed ? "Update Result" : "Record Result")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .disabled(winner.isEmpty)
+                }
+                Section(footer: Text("Recorded results count toward live standings. Disputed scores are reported to moderation.")) {
+                    EmptyView()
+                }
+            }
+            .navigationTitle(match.isPlayed ? "Update Result" : "Record Result")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+struct MatchDisputeSheet: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    let match: EventMatch
+    let event: Event
+
+    @State private var note = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Match") {
+                    Text("\(match.playerAName) vs \(match.playerBName)")
+                        .font(DesignSystem.Typography.headlineSmall)
+                        .foregroundStyle(DesignSystem.Colors.gray900)
+                    Text("Flagging a score pauses it until the organiser re-records or resolves it.")
+                        .font(DesignSystem.Typography.captionMedium)
+                        .foregroundStyle(DesignSystem.Colors.gray500)
+                }
+                Section("Why are you disputing this?") {
+                    TextField("e.g. I won 6-4 6-3, not the other way", text: $note, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+                Section {
+                    Button(role: .destructive) {
+                        EventManager.flagDispute(
+                            match,
+                            event: event,
+                            note: note.trimmingCharacters(in: .whitespaces).isEmpty ? "Score disagrees" : note.trimmingCharacters(in: .whitespaces),
+                            reporter: EventManager.currentPlayerName(context: context),
+                            context: context
+                        )
+                        dismiss()
+                    } label: {
+                        Text("Flag Dispute")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .disabled(note.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .navigationTitle("Dispute Result")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Join / report sheets
 
 struct JoinEventSheet: View {

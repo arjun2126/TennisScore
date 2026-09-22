@@ -147,6 +147,11 @@ final class Event {
     @Relationship(deleteRule: .cascade, inverse: \EventRegistration.event)
     var registrations: [EventRegistration] = []
 
+    /// Auto-generated draw (round-robin or bracket). Cascade deletes matches
+    /// with the event; inverse lives here, not on EventMatch.
+    @Relationship(deleteRule: .cascade, inverse: \EventMatch.event)
+    var matches: [EventMatch] = []
+
     init(
         name: String = "",
         summary: String = "",
@@ -308,4 +313,62 @@ enum EventModeration {
         "Harassment or abusive organiser",
         "Something else",
     ]
+}
+
+// MARK: - Draw / schedule (Phase 5)
+
+enum EventMatchStatus: String, Codable {
+    case scheduled
+    case played
+    case disputed
+}
+
+/// One scheduled court match inside an event's generated draw. Both sides are
+/// stored by name (identity is name-stamped on this device, matching
+/// registrations). A disputed match doesn't count toward live standings.
+@Model
+final class EventMatch {
+    var event: Event?
+    var round: Int
+    var scheduledAt: Date
+    var playerAName: String
+    var playerBName: String
+    var winnerNameRaw: String
+    var scoreLineRaw: String
+    var statusRaw: String
+    var reportedBy: String
+    var disputeNote: String?
+
+    init(
+        event: Event?,
+        round: Int,
+        scheduledAt: Date,
+        playerA: String,
+        playerB: String,
+        winner: String? = nil,
+        scoreLine: String = "",
+        status: EventMatchStatus = .scheduled,
+        reportedBy: String = "",
+        disputeNote: String? = nil
+    ) {
+        self.event = event
+        self.round = round
+        self.scheduledAt = scheduledAt
+        self.playerAName = playerA
+        self.playerBName = playerB
+        self.winnerNameRaw = winner ?? ""
+        self.scoreLineRaw = scoreLine
+        self.statusRaw = status.rawValue
+        self.reportedBy = reportedBy
+        self.disputeNote = disputeNote
+    }
+
+    var status: EventMatchStatus { EventMatchStatus(rawValue: statusRaw) ?? .scheduled }
+    var isPlayed: Bool { status == .played }
+    var winnerName: String? { winnerNameRaw.isEmpty ? nil : winnerNameRaw }
+    var players: [String] { [playerAName, playerBName] }
+
+    func scoreLine() -> String {
+        scoreLineRaw.isEmpty ? (winnerName.map { "\($0) won" } ?? "—") : scoreLineRaw
+    }
 }

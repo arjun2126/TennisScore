@@ -159,6 +159,9 @@ struct EventDetailView: View {
     @State private var showingJoin = false
     @State private var showingReport = false
     @State private var joinFeedback: String?
+    @State private var resultMatch: EventMatch?
+    @State private var disputeMatch: EventMatch?
+    @State private var scheduleMessage: String?
 
     private var myName: String { EventManager.currentPlayerName(context: context) }
     private var isOwner: Bool { EventManager.isOwner(event, name: myName) }
@@ -175,6 +178,10 @@ struct EventDetailView: View {
                     joinCard
                 }
                 rosterCard
+                scheduleCard
+                if !event.matches.isEmpty {
+                    standingsCard
+                }
                 metaGrid
                 feesCard
                 rulesCard
@@ -226,6 +233,12 @@ struct EventDetailView: View {
         }
         .sheet(isPresented: $showingReport) {
             ReportEventSheet(event: event)
+        }
+        .sheet(item: $resultMatch) { match in
+            MatchResultSheet(match: match, event: event)
+        }
+        .sheet(item: $disputeMatch) { match in
+            MatchDisputeSheet(match: match, event: event)
         }
         .alert("Can't Publish", isPresented: .init(get: { errorText != nil }, set: { if !$0 { errorText = nil } })) {
             Button("OK", role: .cancel) {}
@@ -407,6 +420,177 @@ struct EventDetailView: View {
                         .font(DesignSystem.Typography.captionMedium)
                         .foregroundStyle(DesignSystem.Colors.gray500)
                 }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+    }
+
+    private var scheduleCard: some View {
+        let matches = event.matches.sorted {
+            if $0.round != $1.round { return $0.round < $1.round }
+            return $0.scheduledAt < $1.scheduledAt
+        }
+        let nextRound = (event.matches.map(\.round).max() ?? 0) + 1
+        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            HStack {
+                Label("Schedule", systemImage: "list.number")
+                    .font(DesignSystem.Typography.labelLarge)
+                    .foregroundStyle(DesignSystem.Colors.gray900)
+                Spacer()
+                Text("\(matches.count) matches")
+                    .font(DesignSystem.Typography.labelMedium)
+                    .foregroundStyle(DesignSystem.Colors.gray500)
+            }
+            if matches.isEmpty {
+                if isOwner {
+                    Text("Auto-generate a draw from the confirmed roster below.")
+                        .font(DesignSystem.Typography.bodySmall)
+                        .foregroundStyle(DesignSystem.Colors.gray500)
+                    Button {
+                        generateDraw()
+                    } label: {
+                        Label(event.eventType == .tournament ? "Generate Bracket" : "Generate Round-Robin", systemImage: "wand.and.stars")
+                            .font(DesignSystem.Typography.labelLarge)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(EventManager.confirmedNames(event).count < 2)
+                } else {
+                    Text("The organiser hasn't posted a schedule yet.")
+                        .font(DesignSystem.Typography.bodySmall)
+                        .foregroundStyle(DesignSystem.Colors.gray500)
+                }
+            } else {
+                ForEach(groupedRounds(matches), id: \.roundNumber) { group in
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                        Text("Round \(group.roundNumber)")
+                            .font(DesignSystem.Typography.labelMedium)
+                            .foregroundStyle(DesignSystem.Colors.mintAccent)
+                        ForEach(group.matches) { match in
+                            matchRow(match)
+                            Divider().overlay(DesignSystem.Colors.glassBorder)
+                        }
+                    }
+                }
+                if isOwner, event.eventType == .tournament {
+                    if event.matches.allSatisfy({ $0.round < nextRound || $0.status == .played }) {
+                        Button {
+                            let advanced = EventManager.advanceBracket(event, context: context)
+                            scheduleMessage = advanced ? "Advanced bracket to round \(nextRound)." : "All winners need to be recorded first."
+                        } label: {
+                            Label("Advance to Round \(nextRound)", systemImage: "forward.end.fill")
+                                .font(DesignSystem.Typography.labelLarge)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(SecondaryButtonStyle())
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+        .alert("Schedule", isPresented: .init(get: { scheduleMessage != nil }, set: { if !$0 { scheduleMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(scheduleMessage ?? "")
+        }
+    }
+
+    private func groupedRounds(_ matches: [EventMatch]) -> [(roundNumber: Int, matches: [EventMatch])] {
+        let rounds = Array(Set(matches.map(\.round))).sorted()
+        return rounds.map { round in
+            (round, matches.filter { $0.round == round })
+        }
+    }
+
+    private func matchRow(_ match: EventMatch) -> some View {
+        let isMine = match.playerAName == myName || match.playerBName == myName
+        return HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(match.playerAName) vs \(match.playerBName)")
+                    .font(DesignSystem.Typography.bodyMedium)
+                    .foregroundStyle(DesignSystem.Colors.gray900)
+                Text(match.isPlayed ? match.scoreLine() : "R\(match.round) · \(match.scheduledAt.formatted(date: .abbreviated, time: .omitted))")
+                    .font(DesignSystem.Typography.captionSmall)
+                    .foregroundStyle(match.isPlayed ? DesignSystem.Colors.mintAccent : DesignSystem.Colors.gray500)
+                if match.status == .disputed, let note = match.disputeNote {
+                    Text("⚠️ Disputed — \(note)")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .foregroundStyle(DesignSystem.Colors.warning)
+                }
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 4) {
+                if match.isPlayed {
+                    Text("✔ \(match.winnerName ?? "")")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .foregroundStyle(DesignSystem.Colors.mintAccent)
+                }
+                if isOwner {
+                    Button {
+                        resultMatch = match
+                    } label: {
+                        Text(match.isPlayed ? "Update" : "Score")
+                            .font(DesignSystem.Typography.labelSmall)
+                    }
+                    .foregroundStyle(DesignSystem.Colors.mintAccent)
+                } else if isMine {
+                    Button {
+                        disputeMatch = match
+                    } label: {
+                        Image(systemName: "flag")
+                            .font(.system(size: 12))
+                    }
+                    .foregroundStyle(DesignSystem.Colors.gray500)
+                    .accessibilityLabel("Flag score")
+                }
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    private func generateDraw() {
+        if event.eventType == .tournament {
+            EventManager.generateBracket(event, context: context)
+        } else {
+            EventManager.generateRoundRobin(event, context: context)
+        }
+    }
+
+    private var standingsCard: some View {
+        let rows = EventStandings.standings(for: event)
+        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            Label("Live Standings", systemImage: "chart.bar.fill")
+                .font(DesignSystem.Typography.labelLarge)
+                .foregroundStyle(DesignSystem.Colors.gray900)
+            if rows.isEmpty {
+                Text("Results will appear here as matches are scored.")
+                    .font(DesignSystem.Typography.bodySmall)
+                    .foregroundStyle(DesignSystem.Colors.gray500)
+            } else {
+                ForEach(Array(rows.enumerated()), id: \.element.name) { index, row in
+                    HStack {
+                        Text("\(index + 1)")
+                            .font(DesignSystem.Typography.monoSmall)
+                            .foregroundStyle(index < 3 ? DesignSystem.Colors.mintAccent : DesignSystem.Colors.gray500)
+                            .frame(width: 24, alignment: .leading)
+                        Text(row.name)
+                            .font(DesignSystem.Typography.bodySmall)
+                            .foregroundStyle(DesignSystem.Colors.gray900)
+                        Spacer()
+                        Text("\(row.wins)-\(row.losses)")
+                            .font(DesignSystem.Typography.monoSmall)
+                            .foregroundStyle(DesignSystem.Colors.gray500)
+                        Text("\(row.points) pts")
+                            .font(DesignSystem.Typography.labelMedium)
+                            .foregroundStyle(DesignSystem.Colors.mintAccent)
+                            .frame(width: 52, alignment: .trailing)
+                    }
+                }
+                Text("Disputed or unfinished matches don't count toward standings.")
+                    .font(DesignSystem.Typography.captionSmall)
+                    .foregroundStyle(DesignSystem.Colors.gray500)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
