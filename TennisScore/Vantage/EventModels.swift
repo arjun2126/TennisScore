@@ -240,6 +240,7 @@ final class Event {
 // MARK: - Registration & moderation
 
 enum EventRegistrationStatus: String, Codable {
+    case pending
     case confirmed
     case waitlisted
     case cancelled
@@ -263,6 +264,7 @@ final class EventRegistration {
     var statusRaw: String
     var joinedAt: Date
     var event: Event?
+    var paymentRecord: PaymentRecord?
 
     init(playerName: String, player: Player? = nil, status: EventRegistrationStatus, event: Event? = nil) {
         self.playerName = playerName

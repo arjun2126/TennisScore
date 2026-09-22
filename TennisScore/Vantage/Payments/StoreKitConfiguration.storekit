@@ -1,0 +1,213 @@
+{
+  "identifier" : "VantageEvents2",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "$10.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A001",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $10",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.1000",
+      "referenceName" : "Event Entry $10",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$15.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A002",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $15",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.1500",
+      "referenceName" : "Event Entry $15",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$20.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A003",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $20",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.2000",
+      "referenceName" : "Event Entry $20",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$25.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A004",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $25",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.2500",
+      "referenceName" : "Event Entry $25",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$30.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A005",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $30",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.3000",
+      "referenceName" : "Event Entry $30",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$35.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A006",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $35",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.3500",
+      "referenceName" : "Event Entry $35",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$40.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A007",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $40",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.4000",
+      "referenceName" : "Event Entry $40",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$45.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A008",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $45",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.4500",
+      "referenceName" : "Event Entry $45",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$50.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A009",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $50",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.5000",
+      "referenceName" : "Event Entry $50",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$60.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A00A",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $60",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.6000",
+      "referenceName" : "Event Entry $60",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$70.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A00B",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $70",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.7000",
+      "referenceName" : "Event Entry $70",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$80.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A00C",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $80",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.8000",
+      "referenceName" : "Event Entry $80",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "$100.00",
+      "familyShareable" : false,
+      "internalID" : "00000000-0000-0000-0000-00000000A00D",
+      "localizations" : [
+        {
+          "description" : "Vantage event entry (total incl. convenience fee)",
+          "displayName" : "Event Entry $100",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vantage.entry.10000",
+      "referenceName" : "Event Entry $100",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "00000000-0000-0000-0000-000000000001",
+    "_developerTeamID" : "7HQVWZD5T2",
+    "storefront" : "USA",
+    "storeKitErrors" : [],
+    "subscriptionGroupID" : "00000000-0000-0000-0000-000000000002"
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

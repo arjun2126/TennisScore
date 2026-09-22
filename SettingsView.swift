@@ -57,6 +57,18 @@ struct SettingsView: View {
                     }
                     
                     Section {
+                        PurchasesSection()
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    } header: {
+                        Text("Purchases & Payments")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .bold()
+                            .foregroundStyle(DesignSystem.Colors.gray500)
+                            .textCase(.uppercase)
+                    }
+
+                    Section {
                         Button(role: .destructive) { showingDeleteAll = true } label: {
                             Label("Clear All Data", systemImage: "trash")
                                 .font(DesignSystem.Typography.bodyMedium)

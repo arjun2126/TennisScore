@@ -37,6 +37,7 @@ struct RootView: View {
         TabView {
             MatchView().tabItem { Label("Score", systemImage: "tennisball.fill") }
             EventListView().tabItem { Label("Events", systemImage: "calendar") }
+            CreatorDashboardView().tabItem { Label("Creator", systemImage: "banknote") }
             TournamentView().tabItem { Label("Tournaments", systemImage: "trophy.fill") }
             StatsView().tabItem { Label("Stats", systemImage: "chart.bar.fill") }
             PlayerListView(showsDoneButton: false).tabItem { Label("Rivals", systemImage: "person.2.fill") }

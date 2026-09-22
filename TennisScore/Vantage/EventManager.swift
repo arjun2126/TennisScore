@@ -59,6 +59,9 @@ enum EventGate {
         if event.isMinorSpace, event.visibility == .publicEvent {
             return "Events with players under 18 must be private."
         }
+        if event.totalCents > 0, EventPayments.productID(forTotalCents: event.totalCents) == nil {
+            return "Total fee \(EventFees.currencyString(event.totalCents)) must match a supported Apple price point to be purchaseable."
+        }
         return nil
     }
 }
@@ -205,6 +208,27 @@ enum EventManager {
         }
     }
 
+    /// Reserves a provisional (unpaid) seat used by the IAP checkout. Returns
+    /// nil when the player already has a live registration.
+    static func pendingRegistration(for event: Event, name: String, context: ModelContext) -> EventRegistration? {
+        guard registration(event, name: name) == nil else { return nil }
+        let reg = EventRegistration(
+            playerName: name,
+            player: Player.currentUser(in: context),
+            status: .pending,
+            event: event
+        )
+        context.insert(reg)
+        try? context.save()
+        return reg
+    }
+
+    /// Releases a pending seat that never became a purchase.
+    static func abandonPending(_ reg: EventRegistration, context: ModelContext) {
+        reg.statusRaw = EventRegistrationStatus.cancelled.rawValue
+        try? context.save()
+    }
+
     static func cancelRegistration(_ reg: EventRegistration, context: ModelContext) {
         reg.statusRaw = EventRegistrationStatus.cancelled.rawValue
         try? context.save()
@@ -213,6 +237,29 @@ enum EventManager {
     static func report(_ event: Event, reason: String, name: String, context: ModelContext) {
         let report = EventReport(eventToken: event.shareToken, eventName: event.name, reason: reason, reporterName: name)
         context.insert(report)
+        try? context.save()
+    }
+
+    // MARK: Payments ledger (Phase 4)
+
+    static func purchasedRegistrations(_ event: Event) -> [(registration: EventRegistration, record: PaymentRecord)] {
+        event.registrations.compactMap { reg in
+            guard let record = reg.paymentRecord, record.status == .purchased else { return nil }
+            return (reg, record)
+        }
+    }
+
+    static func entryCollectedCents(_ event: Event) -> Int64 {
+        purchasedRegistrations(event).reduce(0) { $0 + $1.record.entryCents }
+    }
+
+    static func feeCollectedCents(_ event: Event) -> Int64 {
+        purchasedRegistrations(event).reduce(0) { $0 + $1.record.feeCents }
+    }
+
+    static func recordPayout(event: Event, amountCents: Int64, recipient: String, context: ModelContext) {
+        let payout = PayoutRecord(eventToken: event.shareToken, eventName: event.name, amountCents: amountCents, recipient: recipient)
+        context.insert(payout)
         try? context.save()
     }
 }

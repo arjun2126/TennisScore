@@ -426,8 +426,17 @@ struct LocationPickerMap: View {
 
 struct JoinEventSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
     let event: Event
     let onConfirm: () -> Void
+    let onPaid: (String) -> Void
+
+    @State private var isPurchasing = false
+
+    private var myName: String { EventManager.currentPlayerName(context: context) }
+    private var payLabel: String {
+        EventFees.currencyString(event.totalCents)
+    }
 
     var body: some View {
         NavigationStack {
@@ -441,14 +450,13 @@ struct JoinEventSheet: View {
                             .font(DesignSystem.Typography.bodySmall)
                             .foregroundStyle(DesignSystem.Colors.gray500)
                     }
-                    EmptyView()
                     if event.totalCents > 0 {
                         FeeBreakdownList(event: event)
-                        Text("This is a preview. The full Apple In-App Purchase checkout arrives in Phase 4 — you will not be charged today.")
+                        Text("Price shown is exactly what Apple charges you, including the convenience fee.")
                             .font(DesignSystem.Typography.captionMedium)
                             .foregroundStyle(DesignSystem.Colors.gray500)
                     } else {
-                        Text("Free entry — no charge. We'll still confirm your spot below.")
+                        Text("Free entry — no charge. We'll confirm your spot below.")
                             .font(DesignSystem.Typography.bodySmall)
                             .foregroundStyle(DesignSystem.Colors.gray500)
                     }
@@ -456,6 +464,7 @@ struct JoinEventSheet: View {
                     if event.visibility == .publicEvent {
                         PolicyRow(icon: "checkmark.shield", text: "18+ verified players only, per review")
                     }
+                    PolicyRow(icon: "arrow.uturn.backward.circle", text: "Pre-event refunds go through Apple (Report a Problem); your spot is auto-released.")
                 }
                 .padding(DesignSystem.Spacing.md)
             }
@@ -466,19 +475,99 @@ struct JoinEventSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                         .foregroundStyle(DesignSystem.Colors.gray900)
+                        .disabled(isPurchasing)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        onConfirm()
-                        dismiss()
-                    } label: {
-                        Text(EventManager.isFull(event) ? "Join Waitlist" : "Confirm Spot")
-                            .font(DesignSystem.Typography.labelLarge)
+                    if isPurchasing {
+                        ProgressView()
+                    } else {
+                        Button {
+                            confirmTapped()
+                        } label: {
+                            Text(buttonTitle)
+                                .font(DesignSystem.Typography.labelLarge)
+                        }
+                        .foregroundStyle(DesignSystem.Colors.mintAccent)
                     }
-                    .foregroundStyle(DesignSystem.Colors.mintAccent)
                 }
             }
+            .alert("Purchase", isPresented: purchaseAlertBinding) {
+                Button("OK", role: .cancel) { purchaseError = nil }
+            } message: {
+                Text(purchaseError ?? "")
+            }
         }
+    }
+
+    private var buttonTitle: String {
+        if EventManager.isFull(event) { return "Join Waitlist" }
+        if event.totalCents == 0 { return "Confirm Spot" }
+        return "Pay \(payLabel)"
+    }
+
+    @State private var purchaseError: String?
+    private var purchaseAlertBinding: Binding<Bool> {
+        Binding(get: { purchaseError != nil }, set: { if !$0 { purchaseError = nil } })
+    }
+
+    private func confirmTapped() {
+        if EventManager.isFull(event) {
+            onConfirm()
+            dismiss()
+            return
+        }
+        if event.totalCents == 0 {
+            onConfirm()
+            dismiss()
+            return
+        }
+        purchaseFlow()
+    }
+
+    private func purchaseFlow() {
+        isPurchasing = true
+        purchaseError = nil
+        Task {
+            if let pending = EventManager.pendingRegistration(for: event, name: myName, context: context) {
+                if let product = await PaymentStore.shared.product(for: event) {
+                    switch await PaymentStore.shared.purchase(product, for: event, registration: pending, context: context) {
+                    case .success:
+                        notifyReminder()
+                        isPurchasing = false
+                        onPaid("Paid — your spot is confirmed. Apple keeps your receipt; you can refund via Report a Problem.")
+                        dismiss()
+                    case .pendingReview:
+                        isPurchasing = false
+                        onPaid("Purchase is under Apple review. Your seat is reserved; you'll be confirmed when it clears.")
+                        dismiss()
+                    case .userCancelled:
+                        isPurchasing = false
+                        purchaseError = "Purchase cancelled."
+                        EventManager.abandonPending(pending, context: context)
+                    case .unavailable(let reason):
+                        isPurchasing = false
+                        purchaseError = reason
+                        EventManager.abandonPending(pending, context: context)
+                    }
+                } else {
+                    isPurchasing = false
+                    purchaseError = "This event's fee isn't available as an Apple purchase yet."
+                    EventManager.abandonPending(pending, context: context)
+                }
+            } else {
+                isPurchasing = false
+                purchaseError = "It looks like you've already joined this event."
+            }
+        }
+    }
+
+    private func notifyReminder() {
+        NotificationManager.shared.scheduleEventReminder(
+            id: "event-start-\(event.shareToken)",
+            date: event.startDate.addingTimeInterval(-3600),
+            title: "\(event.name) starts soon 🎾",
+            body: "Your spot is confirmed. See you on court!"
+        )
     }
 }
 

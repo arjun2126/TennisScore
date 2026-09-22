@@ -41,6 +41,9 @@
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES"
       queueDebuggingEnableBacktraceRecording = "Yes">
+      <StoreKitConfigurationFileReference
+         identifier = "TennisScore/Vantage/Payments/StoreKitConfiguration.storekit">
+      </StoreKitConfigurationFileReference>
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference

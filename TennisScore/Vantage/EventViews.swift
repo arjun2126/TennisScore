@@ -220,7 +220,9 @@ struct EventDetailView: View {
             CreateEventWizard(editing: event)
         }
         .sheet(isPresented: $showingJoin) {
-            JoinEventSheet(event: event, onConfirm: performJoin)
+            JoinEventSheet(event: event, onConfirm: performJoin, onPaid: { message in
+                joinFeedback = message
+            })
         }
         .sheet(isPresented: $showingReport) {
             ReportEventSheet(event: event)
@@ -321,7 +323,7 @@ struct EventDetailView: View {
                     .font(DesignSystem.Typography.labelLarge)
                     .foregroundStyle(DesignSystem.Colors.gray900)
                 FeeBreakdownLine(event: event)
-                Text("You'll confirm entry and fee details next. Payment is a mock in Phase 3 — Apple In-App Purchase arrives in Phase 4.")
+                Text("You'll pay the total via Apple In-App Purchase. The price shown is exactly what Apple charges — refunds go through Apple's Report a Problem before the event.")
                     .font(DesignSystem.Typography.captionMedium)
                     .foregroundStyle(DesignSystem.Colors.gray500)
                 Button {
@@ -428,7 +430,7 @@ struct EventDetailView: View {
                 .font(DesignSystem.Typography.labelLarge)
                 .foregroundStyle(DesignSystem.Colors.gray900)
             FeeBreakdownList(event: event)
-            Text("Payment arrives in Phase 4 (Apple In-App Purchase). You won't be charged yet.")
+            Text("Entry is paid via Apple In-App Purchase. Refunds go through Apple before the event starts.")
                 .font(DesignSystem.Typography.captionMedium)
                 .foregroundStyle(DesignSystem.Colors.gray500)
         }
