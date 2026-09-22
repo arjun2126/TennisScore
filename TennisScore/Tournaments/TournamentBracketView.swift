@@ -92,7 +92,7 @@ struct TournamentBracketView: View {
             .sorted { $0.position < $1.position }
 
         return VStack(spacing: columnSpacing(round: round)) {
-            Text("Round \(roman(round))")
+            Text(roundTitle(round: round))
                 .font(Typography.captionSmall)
                 .fontWeight(.bold)
                 .tracking(1.5)
@@ -156,10 +156,17 @@ struct TournamentBracketView: View {
 
     private var roundRobinStandings: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
-            Text("Round-Robin Standings")
-                .font(Typography.headlineSmall)
-                .foregroundStyle(Color.white)
-                .padding(.leading, Spacing.md)
+            HStack {
+                Text("Round-Robin Standings")
+                    .font(Typography.headlineSmall)
+                    .foregroundStyle(Color.white)
+                Spacer()
+                Text("\(tournament.completedMatches.count) of \(tournament.matches.count) played")
+                    .font(Typography.captionSmall)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.gray300)
+            }
+            .padding(.horizontal, Spacing.md)
 
             if tournament.roundRobinStandings.isEmpty {
                 Text("No completed matches yet. Standings appear as scores come in.")
@@ -244,6 +251,12 @@ struct TournamentBracketView: View {
                 .fontWeight(.bold)
                 .foregroundStyle(Color.mintAccent)
             Spacer()
+            if tournament.type == .knockout {
+                Text("Round \(currentRound) of \(tournament.depth)")
+                    .font(Typography.captionSmall)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.gray300)
+            }
             if tournament.isFullyCompleted, let champion = tournament.champion {
                 Label(champion.name, systemImage: "crown.fill")
                     .font(Typography.captionSmall)
@@ -280,19 +293,28 @@ struct TournamentBracketView: View {
         return base / CGFloat(max(1, 1 << (round - 1)))
     }
 
-    private func roman(_ value: Int) -> String {
-        let map: [(Int, String)] = [
-            (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")
-        ]
-        var num = value
-        var result = ""
-        for (arabic, glyph) in map {
-            while num >= arabic {
-                result += glyph
-                num -= arabic
-            }
+    /// Tennis terminology for the column header, derived purely from how many
+    /// rounds remain and how many players are still alive: the last round is
+    /// "Final", the second-to-last "Semifinal", the third-to-last
+    /// "Quarterfinal", and anything earlier "Round of N" where N is the number
+    /// of players in that round (bracketSize >> (round - 1)).
+    private func roundTitle(round: Int) -> String {
+        switch tournament.depth - round {
+        case 0: return "Final"
+        case 1: return "Semifinal"
+        case 2: return "Quarterfinal"
+        default: return "Round of \(tournament.bracketSize >> (round - 1))"
         }
-        return result
+    }
+
+    /// Earliest round with any unfinished fixture — the last round once the
+    /// bracket is fully played. Drives the "Round X of Y" progress chip.
+    private var currentRound: Int {
+        for round in 1...tournament.depth {
+            let fixtures = tournament.matches.filter { $0.round == round }
+            if fixtures.contains(where: { !$0.isCompleted }) { return round }
+        }
+        return tournament.depth
     }
 
     private func differential(_ value: Int) -> String {
@@ -309,7 +331,7 @@ private struct BracketMatchCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: Spacing.xs) {
+            VStack(spacing: Spacing.xxs) {
                 if fixture.isBye {
                     byeContent
                 } else {
@@ -323,10 +345,11 @@ private struct BracketMatchCard: View {
                         isWinner: fixture.winner == fixture.playerTwo,
                         isMe: fixture.playerTwo?.isCurrentUser == true
                     )
+                    footer
                 }
             }
             .padding(Spacing.xs)
-            .frame(width: nil, height: fixture.isBye ? cardHeight / 2 : cardHeight)
+            .frame(width: nil, height: fixture.isBye ? byeHeight : matchupHeight)
             .frame(minHeight: 40)
             .background(
                 isCurrentUserPath
@@ -351,8 +374,10 @@ private struct BracketMatchCard: View {
 
     private var isComplete: Bool { fixture.isCompleted }
 
+    /// A bye reads as "PLAYER → [BYE]" right on the card — no tap needed —
+    /// keeping the auto-advance from hiding inside the detail sheet.
     private var byeContent: some View {
-        HStack(spacing: Spacing.xs) {
+        HStack(spacing: Spacing.xxs) {
             Image(systemName: "arrow.right")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(Color.mintAccent)
@@ -362,10 +387,38 @@ private struct BracketMatchCard: View {
                 .foregroundStyle(Color.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
+            Spacer(minLength: 0)
+            StatusBadge(text: "BYE", color: Color.mintAccent)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, Spacing.xs)
         .padding(.vertical, Spacing.xs)
+    }
+
+    /// Footer strip: the match status pill (Upcoming / Live / Complete) plus
+    /// the score line for finished matches — same visual language as the
+    /// detail organizer's status badge.
+    private var footer: some View {
+        HStack(spacing: Spacing.xs) {
+            StatusBadge(text: fixture.status.title.uppercased(), color: statusColor)
+            Spacer(minLength: 0)
+            if fixture.isCompleted && !fixture.scoreLine.isEmpty {
+                Text(fixture.scoreLine)
+                    .font(Typography.monoXSmall)
+                    .foregroundStyle(Color.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var statusColor: Color {
+        switch fixture.status {
+        case .pending: Color.gray300
+        case .inProgress: Color.warning
+        case .completed: Color.success
+        }
     }
 
     private func sideRow(name: String?, isWinner: Bool, isMe: Bool) -> some View {
@@ -388,7 +441,8 @@ private struct BracketMatchCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var cardHeight: CGFloat { 26 }
+    private var matchupHeight: CGFloat { 84 }
+    private var byeHeight: CGFloat { 40 }
 }
 
 // MARK: - Organizer's match-detail sheet
