@@ -140,6 +140,7 @@ struct LeagueDetailView: View {
         ScrollView {
             VStack(spacing: Spacing.md) {
                 header
+                standings
                 schedule
             }
             .padding(Spacing.md)
@@ -189,6 +190,42 @@ struct LeagueDetailView: View {
         }
     }
 
+    private var standings: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Standings")
+                .font(Typography.labelLarge)
+                .foregroundStyle(Color.mintAccent)
+            if league.completedMatches.isEmpty {
+                Text("No results yet — standings appear once matches are scored.")
+                    .font(Typography.bodySmall)
+                    .foregroundStyle(Color.gray300)
+            } else {
+                standingsHeader
+                ForEach(Array(league.standings.enumerated()), id: \.element.id) { index, row in
+                    StandingsRowView(rank: index + 1, row: row, isLeader: index == 0)
+                }
+            }
+        }
+    }
+
+    private var standingsHeader: some View {
+        HStack(spacing: Spacing.sm) {
+            Text("#")
+                .frame(width: 22, alignment: .leading)
+            Text("Player")
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text("W‑L")
+                .frame(width: 44, alignment: .trailing)
+            Text("Pts")
+                .frame(width: 30, alignment: .trailing)
+            Text("Sets")
+                .frame(width: 40, alignment: .trailing)
+        }
+        .font(Typography.captionSmall)
+        .foregroundStyle(Color.gray500)
+        .padding(.horizontal, Spacing.sm)
+    }
+
     @ViewBuilder
     private func weekSection(_ week: Int) -> some View {
         let matches = league.matches.filter { $0.week == week }.sorted { $0.position < $1.position }
@@ -200,6 +237,49 @@ struct LeagueDetailView: View {
                 LeagueMatchRow(match: match)
             }
         }
+    }
+}
+
+private struct StandingsRowView: View {
+    let rank: Int
+    let row: League.StandingsRow
+    let isLeader: Bool
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            Group {
+                if isLeader {
+                    Image(systemName: "crown.fill")
+                        .foregroundStyle(Color.orangeAccent)
+                } else {
+                    Text("\(rank)")
+                }
+            }
+            .font(Typography.captionSmall)
+            .frame(width: 22, alignment: .leading)
+            .foregroundStyle(isLeader ? Color.orangeAccent : Color.gray300)
+
+            Text(row.player.name)
+                .font(Typography.bodyMedium)
+                .foregroundStyle(Color.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineLimit(1)
+
+            Text("\(row.wins)-\(row.losses)")
+                .font(Typography.captionSmall)
+                .foregroundStyle(Color.gray300)
+                .frame(width: 44, alignment: .trailing)
+            Text("\(row.points)")
+                .font(Typography.captionSmall)
+                .foregroundStyle(Color.mintAccent)
+                .frame(width: 30, alignment: .trailing)
+            Text("\(row.setsWon)-\(row.setsLost)")
+                .font(Typography.captionSmall)
+                .foregroundStyle(Color.gray300)
+                .frame(width: 40, alignment: .trailing)
+        }
+        .padding(Spacing.sm)
+        .background(Color.courtMid.opacity(0.6), in: RoundedRectangle(cornerRadius: Radius.sm))
     }
 }
 
