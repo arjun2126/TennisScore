@@ -2,92 +2,9 @@ import SwiftUI
 import SwiftData
 import Foundation
 
-// MARK: - League List
-
-struct LeagueListView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \League.dateCreated, order: .reverse) private var leagues: [League]
-
-    @State private var showingCreate = false
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Spacing.md) {
-                    if leagues.isEmpty {
-                        emptyState
-                    } else {
-                        ForEach(leagues) { league in
-                            NavigationLink(value: league) {
-                                LeagueCard(league: league)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-                .padding(Spacing.md)
-            }
-            .background(Color.courtDark)
-            .navigationTitle("Leagues")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingCreate = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundStyle(Color.mintAccent)
-                    }
-                    .accessibilityLabel("New League")
-                }
-            }
-            .navigationDestination(for: League.self) { league in
-                LeagueDetailView(league: league)
-            }
-            .sheet(isPresented: $showingCreate) {
-                CreateLeagueSheet(onCreate: createLeague)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-            }
-        }
-        .tint(Color.mintAccent)
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: "calendar.badge.clock")
-                .font(Typography.displaySmall)
-                .foregroundStyle(Color.orangeAccent)
-            Text("No Leagues Yet")
-                .font(Typography.headlineSmall)
-                .foregroundStyle(Color.white)
-            Text("Create a season-long round‑robin league and score it week by week.")
-                .font(Typography.bodySmall)
-                .foregroundStyle(Color.gray300)
-                .multilineTextAlignment(.center)
-            Button {
-                showingCreate = true
-            } label: {
-                Text("Create League")
-                    .font(Typography.labelLarge)
-                    .padding(.horizontal, Spacing.lg)
-                    .padding(.vertical, Spacing.sm)
-                    .background(Color.mintAccent, in: Capsule())
-                    .foregroundStyle(Color.courtDark)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.xxl)
-    }
-
-    private func createLeague(name: String, roster: [Player]) {
-        LeagueManager.shared.createLeague(name: name, roster: roster, in: modelContext)
-        showingCreate = false
-    }
-}
-
 // MARK: - League Card
 
-private struct LeagueCard: View {
+struct LeagueCard: View {
     let league: League
 
     var body: some View {
@@ -411,7 +328,7 @@ private struct LeagueMatchRow: View {
 
 // MARK: - Create League Sheet
 
-private struct CreateLeagueSheet: View {
+struct CreateLeagueSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Player.name) private var players: [Player]
 

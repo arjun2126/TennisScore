@@ -6,69 +6,163 @@ import Foundation
 
 /// The "Command Center" tab. Lists every saved tournament with live knockout /
 /// round-robin status, surfaces past champions, and lets the player create a
-/// new bracket. All scoring is delegated to a real, tagged `Match` (launched
-/// through `TournamentManager`) so the existing S‑G‑P live scorer + watch
-/// handshake are reused unchanged.
+/// new bracket. A Tournaments | Leagues segmented control also hosts the
+/// season-long round-robin leagues and their weekly scoring. All scoring is
+/// delegated to a real, tagged `Match` (launched through `TournamentManager`) so
+/// the existing S‑G‑P live scorer + watch handshake are reused unchanged.
 struct TournamentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Tournament.dateCreated, order: .reverse) private var tournaments: [Tournament]
+    @Query(sort: \League.dateCreated, order: .reverse) private var leagues: [League]
     @Query(sort: \Player.name) private var players: [Player]
 
+    enum HubMode: String, CaseIterable, Identifiable {
+        case tournaments
+        case leagues
+
+        var id: Self { self }
+
+        var title: String {
+            switch self {
+            case .tournaments: "Tournaments"
+            case .leagues: "Leagues"
+            }
+        }
+
+        var newTitle: String {
+            switch self {
+            case .tournaments: "New Tournament"
+            case .leagues: "New League"
+            }
+        }
+    }
+
+    @State private var mode: HubMode = .tournaments
     @State private var showingCreate = false
-    @State private var showingLeagues = false
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: Spacing.md) {
-                    if tournaments.isEmpty {
-                        emptyState
-                    } else {
-                        ForEach(tournaments) { tournament in
-                            NavigationLink(value: tournament) {
-                                TournamentCard(tournament: tournament)
-                            }
-                            .buttonStyle(.plain)
-                        }
+            VStack(spacing: 0) {
+                Picker("Hub", selection: $mode) {
+                    ForEach(HubMode.allCases) { option in
+                        Text(option.title).tag(option)
                     }
                 }
-                .padding(Spacing.md)
+                .pickerStyle(.segmented)
+                .padding(.horizontal, Spacing.md)
+                .padding(.top, Spacing.sm)
+
+                listSection
             }
             .background(Color.courtDark)
-            .navigationTitle("Tournaments")
+            .navigationTitle(mode.title)
             .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Button {
-                        showingLeagues = true
-                    } label: {
-                        Image(systemName: "calendar")
-                            .foregroundStyle(Color.mintAccent)
-                    }
-                    .accessibilityLabel("Leagues")
+                ToolbarItem(placement: .primaryAction) {
                     Button {
                         showingCreate = true
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .foregroundStyle(Color.mintAccent)
                     }
-                    .accessibilityLabel("New Tournament")
+                    .accessibilityLabel(mode.newTitle)
                 }
             }
             .navigationDestination(for: Tournament.self) { tournament in
                 TournamentBracketView(tournament: tournament)
             }
-            .sheet(isPresented: $showingCreate) {
-                CreateTournamentSheet(onCreate: createTournament)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
+            .navigationDestination(for: League.self) { league in
+                LeagueDetailView(league: league)
             }
-            .sheet(isPresented: $showingLeagues) {
-                LeagueListView()
+            .sheet(isPresented: $showingCreate) {
+                createSheet
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }
         }
         .tint(Color.mintAccent)
+    }
+
+    @ViewBuilder
+    private var listSection: some View {
+        switch mode {
+        case .tournaments:
+            tournamentsList
+        case .leagues:
+            leaguesList
+        }
+    }
+
+    @ViewBuilder
+    private var createSheet: some View {
+        switch mode {
+        case .tournaments:
+            CreateTournamentSheet(onCreate: createTournament)
+        case .leagues:
+            CreateLeagueSheet(onCreate: createLeague)
+        }
+    }
+
+    private var tournamentsList: some View {
+        ScrollView {
+            VStack(spacing: Spacing.md) {
+                if tournaments.isEmpty {
+                    emptyState
+                } else {
+                    ForEach(tournaments) { tournament in
+                        NavigationLink(value: tournament) {
+                            TournamentCard(tournament: tournament)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(Spacing.md)
+        }
+    }
+
+    private var leaguesList: some View {
+        ScrollView {
+            VStack(spacing: Spacing.md) {
+                if leagues.isEmpty {
+                    leagueEmptyState
+                } else {
+                    ForEach(leagues) { league in
+                        NavigationLink(value: league) {
+                            LeagueCard(league: league)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(Spacing.md)
+        }
+    }
+
+    private var leagueEmptyState: some View {
+        VStack(spacing: Spacing.md) {
+            Image(systemName: "calendar.badge.clock")
+                .font(Typography.displaySmall)
+                .foregroundStyle(Color.orangeAccent)
+            Text("No Leagues Yet")
+                .font(Typography.headlineSmall)
+                .foregroundStyle(Color.white)
+            Text("Create a season-long round‑robin league and score it week by week.")
+                .font(Typography.bodySmall)
+                .foregroundStyle(Color.gray300)
+                .multilineTextAlignment(.center)
+            Button {
+                showingCreate = true
+            } label: {
+                Text("Create League")
+                    .font(Typography.labelLarge)
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.vertical, Spacing.sm)
+                    .background(Color.mintAccent, in: Capsule())
+                    .foregroundStyle(Color.courtDark)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Spacing.xxl)
     }
 
     private var emptyState: some View {
@@ -110,6 +204,11 @@ struct TournamentView: View {
             entries: entryPlayers,
             in: modelContext
         )
+        showingCreate = false
+    }
+
+    private func createLeague(name: String, roster: [Player]) {
+        LeagueManager.shared.createLeague(name: name, roster: roster, in: modelContext)
         showingCreate = false
     }
 }
