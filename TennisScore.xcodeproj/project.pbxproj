@@ -37,10 +37,13 @@
 		34E31564000000000000B102 /* PlayerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E31564000000000000B101 /* PlayerListView.swift */; };
 		34E3159B30546FFF00696E97 /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E3159A30546FFF00696E97 /* WatchBridge.swift */; };
 		34E3159C30546FFF00696E97 /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E3159A30546FFF00696E97 /* WatchBridge.swift */; };
-		34E9AA00000000000000B101 /* LeagueModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A101 /* LeagueModels.swift */; };
-		34E9AA00000000000000B102 /* LeagueWatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A102 /* LeagueWatchModels.swift */; };
-		34E9AA00000000000000B201 /* LeagueManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A201 /* LeagueManager.swift */; };
-		34E9AA00000000000000B202 /* LeagueViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A202 /* LeagueViews.swift */; };
+		34E9AA00000000000000B101 /* TennisScore/LeagueModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A101 /* TennisScore/LeagueModels.swift */; };
+		34E9AA00000000000000B102 /* TennisScoreWatch Watch App/LeagueWatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A102 /* TennisScoreWatch Watch App/LeagueWatchModels.swift */; };
+		34E9AA00000000000000B201 /* TennisScore/LeagueManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A201 /* TennisScore/LeagueManager.swift */; };
+		34E9AA00000000000000B202 /* TennisScore/LeagueViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AA00000000000000A202 /* TennisScore/LeagueViews.swift */; };
+		34E9AC00000000000000B101 /* TennisScore/Vantage/EventModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A101 /* TennisScore/Vantage/EventModels.swift */; };
+		34E9AC00000000000000B102 /* TennisScore/Vantage/EventManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A102 /* TennisScore/Vantage/EventManager.swift */; };
+		34E9AC00000000000000B103 /* TennisScore/Vantage/EventViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A103 /* TennisScore/Vantage/EventViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,10 +114,13 @@
 		34E31564000000000000A103 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		34E31564000000000000B101 /* PlayerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerListView.swift; sourceTree = "<group>"; };
 		34E3159A30546FFF00696E97 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
-		34E9AA00000000000000A101 /* LeagueModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TennisScore/LeagueModels.swift"; sourceTree = "<group>"; };
-		34E9AA00000000000000A102 /* LeagueWatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TennisScoreWatch Watch App/LeagueWatchModels.swift"; sourceTree = "<group>"; };
-		34E9AA00000000000000A201 /* LeagueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TennisScore/LeagueManager.swift"; sourceTree = "<group>"; };
-		34E9AA00000000000000A202 /* LeagueViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TennisScore/LeagueViews.swift"; sourceTree = "<group>"; };
+		34E9AA00000000000000A101 /* TennisScore/LeagueModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/LeagueModels.swift; sourceTree = "<group>"; };
+		34E9AA00000000000000A102 /* TennisScoreWatch Watch App/LeagueWatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TennisScoreWatch Watch App/LeagueWatchModels.swift"; sourceTree = "<group>"; };
+		34E9AA00000000000000A201 /* TennisScore/LeagueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/LeagueManager.swift; sourceTree = "<group>"; };
+		34E9AA00000000000000A202 /* TennisScore/LeagueViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/LeagueViews.swift; sourceTree = "<group>"; };
+		34E9AC00000000000000A101 /* TennisScore/Vantage/EventModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventModels.swift; sourceTree = "<group>"; };
+		34E9AC00000000000000A102 /* TennisScore/Vantage/EventManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventManager.swift; sourceTree = "<group>"; };
+		34E9AC00000000000000A103 /* TennisScore/Vantage/EventViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -125,16 +131,41 @@
 			);
 			target = 34E31541305462DE00696E97 /* TennisScoreWidgetExtension */;
 		};
+		34E9AC00000000000000D101 /* Exceptions for "TennisScore" folder in "TennisScore" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				LeagueManager.swift,
+				LeagueModels.swift,
+				LeagueViews.swift,
+				"Vantage/EventManager.swift",
+				"Vantage/EventModels.swift",
+				"Vantage/EventViews.swift",
+			);
+			target = 34E314713054387E00696E97 /* TennisScore */;
+		};
+		34E9AC00000000000000D102 /* Exceptions for "TennisScoreWatch Watch App" folder in "TennisScoreWatch Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				LeagueWatchModels.swift,
+			);
+			target = 34116A543055EEF300FA1188 /* TennisScoreWatch Watch App */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		34116A563055EEF300FA1188 /* TennisScoreWatch Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				34E9AC00000000000000D102 /* Exceptions for "TennisScoreWatch Watch App" folder in "TennisScoreWatch Watch App" target */,
+			);
 			path = "TennisScoreWatch Watch App";
 			sourceTree = "<group>";
 		};
 		34E314743054387E00696E97 /* TennisScore */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				34E9AC00000000000000D101 /* Exceptions for "TennisScore" folder in "TennisScore" target */,
+			);
 			path = TennisScore;
 			sourceTree = "<group>";
 		};
@@ -203,10 +234,13 @@
 				34116A453054766600FA1188 /* Player.swift */,
 				34E31564000000000000B101 /* PlayerListView.swift */,
 				34E3159A30546FFF00696E97 /* WatchBridge.swift */,
-				34E9AA00000000000000A101 /* LeagueModels.swift */,
-				34E9AA00000000000000A102 /* LeagueWatchModels.swift */,
-				34E9AA00000000000000A201 /* LeagueManager.swift */,
-				34E9AA00000000000000A202 /* LeagueViews.swift */,
+				34E9AA00000000000000A101 /* TennisScore/LeagueModels.swift */,
+				34E9AA00000000000000A102 /* TennisScoreWatch Watch App/LeagueWatchModels.swift */,
+				34E9AA00000000000000A201 /* TennisScore/LeagueManager.swift */,
+				34E9AA00000000000000A202 /* TennisScore/LeagueViews.swift */,
+				34E9AC00000000000000A101 /* TennisScore/Vantage/EventModels.swift */,
+				34E9AC00000000000000A102 /* TennisScore/Vantage/EventManager.swift */,
+				34E9AC00000000000000A103 /* TennisScore/Vantage/EventViews.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -380,7 +414,7 @@
 				34116A663055EF2800FA1188 /* Theme.swift in Sources */,
 				34E3159C30546FFF00696E97 /* WatchBridge.swift in Sources */,
 				34116A673055EF3000FA1188 /* Player.swift in Sources */,
-				34E9AA00000000000000B102 /* LeagueWatchModels.swift in Sources */,
+				34E9AA00000000000000B102 /* TennisScoreWatch Watch App/LeagueWatchModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -407,9 +441,12 @@
 				34E31527305450AA00696E97 /* Models.swift in Sources */,
 				34E3159B30546FFF00696E97 /* WatchBridge.swift in Sources */,
 				34E31564000000000000A104 /* DesignSystem.swift in Sources */,
-				34E9AA00000000000000B101 /* LeagueModels.swift in Sources */,
-				34E9AA00000000000000B201 /* LeagueManager.swift in Sources */,
-				34E9AA00000000000000B202 /* LeagueViews.swift in Sources */,
+				34E9AA00000000000000B101 /* TennisScore/LeagueModels.swift in Sources */,
+				34E9AA00000000000000B201 /* TennisScore/LeagueManager.swift in Sources */,
+				34E9AA00000000000000B202 /* TennisScore/LeagueViews.swift in Sources */,
+				34E9AC00000000000000B101 /* TennisScore/Vantage/EventModels.swift in Sources */,
+				34E9AC00000000000000B102 /* TennisScore/Vantage/EventManager.swift in Sources */,
+				34E9AC00000000000000B103 /* TennisScore/Vantage/EventViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -643,7 +680,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7HQVWZD5T2;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TennisScore uses your location to automatically fill in where the match is being played.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -683,7 +721,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7HQVWZD5T2;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TennisScore uses your location to automatically fill in where the match is being played.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

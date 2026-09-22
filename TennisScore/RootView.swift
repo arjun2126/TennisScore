@@ -6,6 +6,7 @@ struct RootView: View {
     @StateObject private var session = UserSessionManager.shared
     @State private var showingOnboarding = false
     @State private var showingProfileSetup = false
+    @State private var deepLinkToken: String?
     @Query private var players: [Player]
     
     private var storeHasUser: Bool {
@@ -35,12 +36,29 @@ struct RootView: View {
     var body: some View {
         TabView {
             MatchView().tabItem { Label("Score", systemImage: "tennisball.fill") }
+            EventListView().tabItem { Label("Events", systemImage: "calendar") }
             TournamentView().tabItem { Label("Tournaments", systemImage: "trophy.fill") }
             StatsView().tabItem { Label("Stats", systemImage: "chart.bar.fill") }
             PlayerListView(showsDoneButton: false).tabItem { Label("Rivals", systemImage: "person.2.fill") }
             SettingsView().tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
         .tint(Color.mintAccent)
+        .onOpenURL { url in
+            if let token = EventLink.token(from: url) {
+                deepLinkToken = token
+            }
+        }
+        .fullScreenCover(
+            isPresented: Binding(
+                get: { deepLinkToken != nil },
+                set: { if !$0 { deepLinkToken = nil } }
+            )
+        ) {
+            if let token = deepLinkToken {
+                EventDetailHostView(token: token)
+                    .onDisappear { deepLinkToken = nil }
+            }
+        }
         .onAppear {
             // Only trigger if they haven't seen it
             if !session.hasSeenOnboarding {

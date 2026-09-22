@@ -133,8 +133,7 @@ final class LeagueMatch {
     var loserSetsLost: Int { winnerSetsWon }
 
     private func setsWonBy(_ winnerSide: Bool) -> Int {
-        guard isCompleted, let winner else { return 0 }
-        let winnerName = winnerSide ? winner.name : (winner == playerOne ? playerTwo?.name : playerOne?.name)
+        guard isCompleted else { return 0 }
         let parts = setScores.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
         guard !parts.isEmpty else {
             return winnerSide ? 3 : 2
