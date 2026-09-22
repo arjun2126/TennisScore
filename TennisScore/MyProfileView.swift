@@ -2,6 +2,8 @@ import SwiftUI
 import SwiftData
 
 /// Personal Performance Journal dashboard for the current user ("Me").
+/// Renders as a plain embeddable section (no tab, no NavigationStack) so it
+/// can live inside the Settings tab.
 struct MyProfileView: View {
     @Query(sort: \Player.name) private var players: [Player]
     @Query private var matches: [Match]
@@ -38,24 +40,14 @@ struct MyProfileView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                DesignSystem.Colors.courtDark.ignoresSafeArea()
-                ScrollView {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
-                        if let me {
-                            profileHeader(me: me)
-                            performanceCard
-                            biometricsCard
-                        } else {
-                            setupPromptCard
-                        }
-                    }
-                    .padding(.horizontal, DesignSystem.Layout.screenPadding)
-                    .padding(.vertical, DesignSystem.Spacing.lg)
-                }
+        VStack(spacing: DesignSystem.Spacing.lg) {
+            if let me {
+                profileHeader(me: me)
+                performanceCard
+                biometricsCard
+            } else {
+                setupPromptCard
             }
-            .navigationTitle("My Profile")
         }
     }
     
@@ -69,7 +61,7 @@ struct MyProfileView: View {
                 .font(DesignSystem.Typography.headlineMedium)
                 .bold()
                 .foregroundStyle(.white)
-            Text("Go to the Players tab and tap ☆ on your name. Your wins, rivals, and biometrics will live here.")
+            Text("Go to the Rivals tab and tap ☆ on your name. Your wins, rivals, and biometrics will live here.")
                 .font(DesignSystem.Typography.bodyMedium)
                 .foregroundStyle(DesignSystem.Colors.gray500)
                 .multilineTextAlignment(.center)

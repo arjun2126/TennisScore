@@ -23,7 +23,6 @@
 		34E31529305450B300696E97 /* TennisEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E31528305450B300696E97 /* TennisEngine.swift */; };
 		34E3152D305450E600696E97 /* SupportingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E3152C305450DD00696E97 /* SupportingViews.swift */; };
 		34E3152F305450F000696E97 /* MatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E3152E305450F000696E97 /* MatchView.swift */; };
-		34E31531305450F900696E97 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E31530305450F900696E97 /* HistoryView.swift */; };
 		34E31533305450FF00696E97 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E31532305450FF00696E97 /* StatsView.swift */; };
 		34E315363054511200696E97 /* TennisScoreApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E315353054511200696E97 /* TennisScoreApp.swift */; };
 		34E3153B305459CC00696E97 /* MatchDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E3153A305459CC00696E97 /* MatchDetailView.swift */; };
@@ -96,7 +95,6 @@
 		34E31528305450B300696E97 /* TennisEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisEngine.swift; sourceTree = "<group>"; };
 		34E3152C305450DD00696E97 /* SupportingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportingViews.swift; sourceTree = "<group>"; };
 		34E3152E305450F000696E97 /* MatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchView.swift; sourceTree = "<group>"; };
-		34E31530305450F900696E97 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		34E31532305450FF00696E97 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		34E315353054511200696E97 /* TennisScoreApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScoreApp.swift; sourceTree = "<group>"; };
 		34E3153A305459CC00696E97 /* MatchDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchDetailView.swift; sourceTree = "<group>"; };
@@ -191,7 +189,6 @@
 				34116A4D3054DAE700FA1188 /* SettingsView.swift */,
 				34E3152E305450F000696E97 /* MatchView.swift */,
 				34E3152C305450DD00696E97 /* SupportingViews.swift */,
-				34E31530305450F900696E97 /* HistoryView.swift */,
 				34E3153A305459CC00696E97 /* MatchDetailView.swift */,
 				34E31532305450FF00696E97 /* StatsView.swift */,
 				34E3153C30545BA800696E97 /* PlayerProfileView.swift */,
@@ -380,7 +377,6 @@
 			files = (
 				34E31529305450B300696E97 /* TennisEngine.swift in Sources */,
 				34E3153B305459CC00696E97 /* MatchDetailView.swift in Sources */,
-				34E31531305450F900696E97 /* HistoryView.swift in Sources */,
 				34116A4E3054DAE700FA1188 /* SettingsView.swift in Sources */,
 				34E31564000000000000B102 /* PlayerListView.swift in Sources */,
 				34E3152F305450F000696E97 /* MatchView.swift in Sources */,

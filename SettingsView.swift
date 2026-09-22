@@ -13,6 +13,24 @@ struct SettingsView: View {
                 DesignSystem.Colors.courtDark.ignoresSafeArea()
                 List {
                     Section {
+                        MyProfileView()
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(
+                                top: DesignSystem.Spacing.md,
+                                leading: DesignSystem.Spacing.lg,
+                                bottom: DesignSystem.Spacing.md,
+                                trailing: DesignSystem.Spacing.lg
+                            ))
+                    } header: {
+                        Text("Profile")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .bold()
+                            .foregroundStyle(DesignSystem.Colors.gray500)
+                            .textCase(.uppercase)
+                    }
+                    
+                    Section {
                         Button { showingInstructions = true } label: {
                             Label("Instructions", systemImage: "questionmark.circle")
                                 .font(DesignSystem.Typography.bodyMedium)

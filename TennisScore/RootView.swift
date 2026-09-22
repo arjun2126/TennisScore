@@ -36,10 +36,8 @@ struct RootView: View {
         TabView {
             MatchView().tabItem { Label("Score", systemImage: "tennisball.fill") }
             TournamentView().tabItem { Label("Tournaments", systemImage: "trophy.fill") }
-            HistoryView().tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
             StatsView().tabItem { Label("Stats", systemImage: "chart.bar.fill") }
             PlayerListView(showsDoneButton: false).tabItem { Label("Rivals", systemImage: "person.2.fill") }
-            MyProfileView().tabItem { Label("Profile", systemImage: "person.crop.circle") }
             SettingsView().tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
         .tint(Color.mintAccent)
