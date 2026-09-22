@@ -117,6 +117,8 @@ enum EventManager {
         event.endDate = config.endDate
         event.regDeadline = config.regDeadline
         event.locationLabel = config.location
+        event.latitude = config.latitude
+        event.longitude = config.longitude
         event.skillMin = config.skillMin
         event.skillMax = config.skillMax
         event.ageMin = config.ageMin
@@ -129,6 +131,107 @@ enum EventManager {
         event.visibilityRaw = config.visibility.rawValue
         event.attestMinorConsent = config.attestMinorConsent
         try? context.save()
+    }
+
+    // MARK: Roster & joining
+
+    static func currentPlayerName(context: ModelContext) -> String {
+        ownerStamp(context: context)
+    }
+
+    static func isOwner(_ event: Event, name: String?) -> Bool {
+        guard let name, !name.isEmpty else { return false }
+        return event.createdByName == name || event.createdByName.isEmpty
+    }
+
+    static func confirmedCount(_ event: Event) -> Int {
+        event.registrations.filter { $0.status == .confirmed }.count
+    }
+
+    static func waitlistCount(_ event: Event) -> Int {
+        event.registrations.filter { $0.status == .waitlisted }.count
+    }
+
+    static func isFull(_ event: Event) -> Bool {
+        confirmedCount(event) >= event.maxPlayers
+    }
+
+    /// Pure decision: does a spot open at the current confirmed count?
+    nonisolated static func registrationStatusFor(confirmed: Int, maxPlayers: Int) -> EventRegistrationStatus {
+        confirmed < maxPlayers ? .confirmed : .waitlisted
+    }
+
+    /// Returns the live registration for `name` (confirmed or waitlisted), if any.
+    static func registration(_ event: Event, name: String) -> EventRegistration? {
+        event.registrations.first { $0.playerName == name && $0.status != .cancelled && $0.status != .refunded }
+    }
+
+    static func joinedRoster(_ event: Event) -> [EventRegistration] {
+        event.registrations
+            .filter { $0.status == .confirmed || $0.status == .waitlisted }
+            .sorted { $0.joinedAt < $1.joinedAt }
+    }
+
+    /// Joins (or waitlists) the current player. Mock in Phase 3; Phase 4 gates
+    /// entry on a verified IAP purchase. Schedules a start reminder.
+    @discardableResult
+    static func join(_ event: Event, name: String, context: ModelContext) -> EventRegistrationStatus {
+        defer { try? context.save() }
+        if let existing = registration(event, name: name) {
+            return existing.status
+        }
+        let spotOpen = registrationStatusFor(confirmed: confirmedCount(event), maxPlayers: event.maxPlayers) == .confirmed
+        let status: EventRegistrationStatus = spotOpen ? .confirmed : .waitlisted
+        let reg = EventRegistration(
+            playerName: name,
+            player: Player.currentUser(in: context),
+            status: status,
+            event: event
+        )
+        context.insert(reg)
+        NotificationManager.shared.scheduleEventReminder(
+            id: "event-start-\(event.shareToken)",
+            date: event.startDate.addingTimeInterval(-3600),
+            title: "\(event.name) starts soon 🎾",
+            body: spotOpen ? "Your spot is confirmed. See you on court!" : "You're on the waitlist — keep an eye on your spot."
+        )
+        return status
+    }
+
+    static func leave(_ event: Event, name: String, context: ModelContext) {
+        if let reg = registration(event, name: name) {
+            reg.statusRaw = EventRegistrationStatus.cancelled.rawValue
+            try? context.save()
+        }
+    }
+
+    static func cancelRegistration(_ reg: EventRegistration, context: ModelContext) {
+        reg.statusRaw = EventRegistrationStatus.cancelled.rawValue
+        try? context.save()
+    }
+
+    static func report(_ event: Event, reason: String, name: String, context: ModelContext) {
+        let report = EventReport(eventToken: event.shareToken, eventName: event.name, reason: reason, reporterName: name)
+        context.insert(report)
+        try? context.save()
+    }
+}
+
+// MARK: - Proximity (pure, haversine)
+
+enum EventProximity {
+    static func distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double) -> Double {
+        let r = 6371.0
+        let dLat = (lat2 - lat1) * .pi / 180
+        let dLon = (lon2 - lon1) * .pi / 180
+        let a = sin(dLat / 2) * sin(dLat / 2)
+            + cos(lat1 * .pi / 180) * cos(lat2 * .pi / 180) * sin(dLon / 2) * sin(dLon / 2)
+        return r * 2 * atan2(sqrt(a), sqrt(1 - a))
+    }
+
+    static func distanceKm(from lat: Double?, _ lon: Double?, to event: Event) -> Double? {
+        guard let lat, let lon, let elat = event.latitude, let elon = event.longitude else { return nil }
+        return distanceKm(lat1: lat, lon1: lon, lat2: elat, lon2: elon)
     }
 }
 
@@ -144,6 +247,8 @@ struct EventDraftConfig {
     var endDate = Calendar.current.date(byAdding: .day, value: 14, to: .now) ?? .now
     var regDeadline = Calendar.current.date(byAdding: .day, value: 6, to: .now) ?? .now
     var location = ""
+    var latitude: Double?
+    var longitude: Double?
     var skillMin = 1
     var skillMax = 7
     var ageMin = 18
@@ -170,6 +275,8 @@ struct EventDraftConfig {
         endDate = event.endDate
         regDeadline = event.regDeadline
         location = event.locationLabel
+        latitude = event.latitude
+        longitude = event.longitude
         skillMin = event.skillMin
         skillMax = event.skillMax
         ageMin = event.ageMin

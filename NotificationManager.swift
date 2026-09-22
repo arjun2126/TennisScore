@@ -68,6 +68,23 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         )
     }
     
+    // MARK: - Event notifications (mocked schedule-reminders)
+
+    func scheduleEventReminder(id: String, date: Date, title: String, body: String) {
+        requestPermission()
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = UNNotificationSound.default
+        let date = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: date, repeats: false)
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: trigger)) { _ in }
+    }
+
+    func removeEventReminders(identifiers: [String]) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
+    }
+
     private func scheduleWeeklyReminder(id: String, weekday: Int, hour: Int, title: String, body: String) {
         let content = UNMutableNotificationContent()
         content.title = title

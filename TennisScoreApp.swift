@@ -17,6 +17,6 @@ struct VantageApp: App {
         WindowGroup {
             RootView().preferredColorScheme(.dark)
         }
-        .modelContainer(for: [Match.self, PointEvent.self, Player.self, Tournament.self, TournamentMatch.self, League.self, LeagueMatch.self, Event.self])
+        .modelContainer(for: [Match.self, PointEvent.self, Player.self, Tournament.self, TournamentMatch.self, League.self, LeagueMatch.self, Event.self, EventRegistration.self, EventReport.self])
     }
 }

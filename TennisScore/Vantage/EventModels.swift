@@ -142,6 +142,11 @@ final class Event {
     var statusRaw: String
     var attestMinorConsent: Bool
 
+    /// Joined (and waitlisted) players. Cascade deletes registrations when an
+    /// event is removed. Inverse lives here, not on Player (watch mirror).
+    @Relationship(deleteRule: .cascade, inverse: \EventRegistration.event)
+    var registrations: [EventRegistration] = []
+
     init(
         name: String = "",
         summary: String = "",
@@ -230,4 +235,75 @@ final class Event {
         }
         return "Free entry"
     }
+}
+
+// MARK: - Registration & moderation
+
+enum EventRegistrationStatus: String, Codable {
+    case confirmed
+    case waitlisted
+    case cancelled
+    case refunded
+}
+
+enum EventReportStatus: String, Codable {
+    case pending
+    case resolved
+    case dismissed
+}
+
+/// A player's spot (or waitlist position) on an event. The `player`
+/// relationship is intentionally one-sided (no inverse on `Player`) because
+/// `Player.swift` also compiles into the watch target; identity is
+/// name-stamped locally. `Event.registrations` owns the cascade inverse.
+@Model
+final class EventRegistration {
+    var playerName: String
+    var player: Player?
+    var statusRaw: String
+    var joinedAt: Date
+    var event: Event?
+
+    init(playerName: String, player: Player? = nil, status: EventRegistrationStatus, event: Event? = nil) {
+        self.playerName = playerName
+        self.player = player
+        self.statusRaw = status.rawValue
+        self.joinedAt = .now
+        self.event = event
+    }
+
+    var status: EventRegistrationStatus { EventRegistrationStatus(rawValue: statusRaw) ?? .cancelled }
+}
+
+/// UGC moderation prep (Guideline 1.2): public events render a report flow that
+/// writes one of these; the admin queue (Phase 8) reviews them.
+@Model
+final class EventReport {
+    var eventToken: String
+    var eventName: String
+    var reason: String
+    var reporterName: String
+    var statusRaw: String
+    var createdAt: Date
+
+    init(eventToken: String, eventName: String, reason: String, reporterName: String) {
+        self.eventToken = eventToken
+        self.eventName = eventName
+        self.reason = reason
+        self.reporterName = reporterName
+        self.statusRaw = EventReportStatus.pending.rawValue
+        self.createdAt = .now
+    }
+
+    var status: EventReportStatus { EventReportStatus(rawValue: statusRaw) ?? .pending }
+}
+
+enum EventModeration {
+    static let reportReasons = [
+        "Inappropriate content",
+        "Misleading or fake event",
+        "Entry fee or payment problem",
+        "Harassment or abusive organiser",
+        "Something else",
+    ]
 }

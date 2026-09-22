@@ -3,51 +3,48 @@ import SwiftData
 import UIKit
 import CoreImage
 
-// MARK: - Events tab (Phase 2: list of created events; browse arrives Phase 3)
+// MARK: - Events tab hub (browse + my events; Phase 3)
 
 struct EventListView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Event.createdAt, order: .reverse) private var events: [Event]
+    @Query(sort: \EventRegistration.joinedAt, order: .reverse) private var registrations: [EventRegistration]
 
-    @State private var filter: EventListFilter = .all
+    @State private var mode: EventHubMode = .explore
     @State private var showingCreate = false
     @State private var editingEvent: Event?
 
-    private enum EventListFilter: String, CaseIterable, Identifiable {
-        case all, drafts, published
+    private enum EventHubMode: String, CaseIterable, Identifiable {
+        case explore, mine
         var id: String { rawValue }
-        var title: String { rawValue.capitalized }
+        var title: String { self == .explore ? "Explore" : "My Events" }
     }
 
-    private var filtered: [Event] {
-        switch filter {
-        case .all: return events
-        case .drafts: return events.filter { $0.status == .draft }
-        case .published: return events.filter { $0.status == .published }
-        }
+    private var myEvents: [Event] {
+        let mine = events.filter { EventManager.isOwner($0, name: EventManager.currentPlayerName(context: context)) }
+        let joined = registrations
+            .filter { $0.status == .confirmed || $0.status == .waitlisted }
+            .compactMap(\.event)
+        return Array(Set(mine).union(Set(joined))).sorted { $0.createdAt > $1.createdAt }
     }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: DesignSystem.Spacing.md) {
-                    header
-                    if filtered.isEmpty {
-                        emptyState
-                    } else {
-                        LazyVStack(spacing: DesignSystem.Spacing.sm) {
-                            ForEach(filtered) { event in
-                                NavigationLink {
-                                    EventDetailView(event: event)
-                                } label: {
-                                    EventRow(event: event)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
+            VStack(spacing: 0) {
+                Picker("Mode", selection: $mode) {
+                    ForEach(EventHubMode.allCases) { option in
+                        Text(option.title).tag(option)
                     }
                 }
-                .padding(DesignSystem.Spacing.md)
+                .pickerStyle(.segmented)
+                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+                switch mode {
+                case .explore:
+                    EventExploreView()
+                case .mine:
+                    myEventsList
+                }
             }
             .background(DesignSystem.Colors.courtDark)
             .navigationTitle("Events")
@@ -72,50 +69,40 @@ struct EventListView: View {
         }
     }
 
-    private var header: some View {
-        VStack(spacing: DesignSystem.Spacing.sm) {
-            HStack(spacing: DesignSystem.Spacing.xs) {
-                ForEach(EventListFilter.allCases) { option in
-                    Button {
-                        withAnimation(DesignSystem.Animation.easeOutFast) { filter = option }
-                    } label: {
-                        Text(option.title)
-                            .font(DesignSystem.Typography.labelMedium)
-                            .foregroundStyle(filter == option ? .black : DesignSystem.Colors.gray900)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, DesignSystem.Spacing.xs)
-                            .background(
-                                Capsule().fill(filter == option ? DesignSystem.Colors.mintAccent : Color.white.opacity(0.06))
-                            )
+    private var myEventsList: some View {
+        ScrollView {
+            VStack(spacing: DesignSystem.Spacing.md) {
+                if myEvents.isEmpty {
+                    emptyMine
+                } else {
+                    LazyVStack(spacing: DesignSystem.Spacing.sm) {
+                        ForEach(myEvents) { event in
+                            NavigationLink {
+                                EventDetailView(event: event)
+                            } label: {
+                                EventRow(event: event)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
             }
-            Text("\(events.count) overall · \(events.filter { $0.status == .published }.count) published")
-                .font(DesignSystem.Typography.captionMedium)
-                .foregroundStyle(DesignSystem.Colors.gray500)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(DesignSystem.Spacing.md)
         }
     }
 
-    private var emptyState: some View {
+    private var emptyMine: some View {
         VStack(spacing: DesignSystem.Spacing.md) {
-            Image(systemName: "calendar.badge.plus")
+            Image(systemName: "person.crop.circle.badge.plus")
                 .font(.system(size: 44))
                 .foregroundStyle(DesignSystem.Colors.mintAccentDim)
-            Text(filter == .all ? "No events yet" : "No \(filter.title.lowercased()) events")
+            Text("Nothing here yet")
                 .font(DesignSystem.Typography.headlineSmall)
                 .foregroundStyle(DesignSystem.Colors.gray900)
-            Text("Create a tournament, league or ladder to get started. Payment arrives in Phase 4 — fees are shown until then.")
+            Text("Create an event or join one from Explore — it'll appear in My Events.")
                 .font(DesignSystem.Typography.bodySmall)
                 .foregroundStyle(DesignSystem.Colors.gray500)
                 .multilineTextAlignment(.center)
-            Button {
-                showingCreate = true
-            } label: {
-                Label("Create Event", systemImage: "plus")
-            }
-            .buttonStyle(PrimaryButtonStyle())
-            .frame(maxWidth: 260)
         }
         .padding(.top, DesignSystem.Spacing.xxxl)
     }
@@ -169,11 +156,25 @@ struct EventDetailView: View {
     @State private var showingEdit = false
     @State private var errorText: String?
     @State private var copiedLink = false
+    @State private var showingJoin = false
+    @State private var showingReport = false
+    @State private var joinFeedback: String?
+
+    private var myName: String { EventManager.currentPlayerName(context: context) }
+    private var isOwner: Bool { EventManager.isOwner(event, name: myName) }
+    private var myRegistration: EventRegistration? { EventManager.registration(event, name: myName) }
 
     var body: some View {
         ScrollView {
             VStack(spacing: DesignSystem.Spacing.md) {
                 summaryCard
+                statusBanner
+                if isOwner {
+                    ownerManageCard
+                } else if event.status == .published {
+                    joinCard
+                }
+                rosterCard
                 metaGrid
                 feesCard
                 rulesCard
@@ -185,32 +186,63 @@ struct EventDetailView: View {
         .navigationTitle(event.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    switch event.status {
-                    case .draft:
-                        Button { attemptPublish() } label: { Label("Publish", systemImage: "paperplane.fill") }
-                        Button(role: .destructive) { EventManager.cancel(event, context: context) } label: { Label("Cancel Event", systemImage: "xmark.circle") }
-                    case .published:
-                        Button { EventManager.unpublish(event, context: context) } label: { Label("Unpublish", systemImage: "arrow.uturn.backward") }
-                        Button(role: .destructive) { EventManager.cancel(event, context: context) } label: { Label("Cancel Event", systemImage: "xmark.circle") }
-                    default:
-                        Button { EventManager.unpublish(event, context: context) } label: { Label("Reopen as Draft", systemImage: "arrow.uturn.backward") }
+            if isOwner {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        switch event.status {
+                        case .draft:
+                            Button { attemptPublish() } label: { Label("Publish", systemImage: "paperplane.fill") }
+                            Button(role: .destructive) { EventManager.cancel(event, context: context) } label: { Label("Cancel Event", systemImage: "xmark.circle") }
+                        case .published:
+                            Button { EventManager.unpublish(event, context: context) } label: { Label("Unpublish", systemImage: "arrow.uturn.backward") }
+                            Button(role: .destructive) { EventManager.cancel(event, context: context) } label: { Label("Cancel Event", systemImage: "xmark.circle") }
+                        default:
+                            Button { EventManager.unpublish(event, context: context) } label: { Label("Reopen as Draft", systemImage: "arrow.uturn.backward") }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .foregroundStyle(DesignSystem.Colors.mintAccent)
                     }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .foregroundStyle(DesignSystem.Colors.mintAccent)
+                }
+            } else if event.visibility == .publicEvent {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingReport = true
+                    } label: {
+                        Image(systemName: "flag")
+                            .foregroundStyle(DesignSystem.Colors.gray900)
+                    }
+                    .accessibilityLabel("Report event")
                 }
             }
         }
         .sheet(isPresented: $showingEdit) {
             CreateEventWizard(editing: event)
         }
+        .sheet(isPresented: $showingJoin) {
+            JoinEventSheet(event: event, onConfirm: performJoin)
+        }
+        .sheet(isPresented: $showingReport) {
+            ReportEventSheet(event: event)
+        }
         .alert("Can't Publish", isPresented: .init(get: { errorText != nil }, set: { if !$0 { errorText = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorText ?? "")
         }
+        .alert("Joined", isPresented: .init(get: { joinFeedback != nil }, set: { if !$0 { joinFeedback = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(joinFeedback ?? "")
+        }
+        .animation(DesignSystem.Animation.easeOutFast, value: event.registrations.count)
+    }
+
+    private func performJoin() {
+        let status = EventManager.join(event, name: myName, context: context)
+        joinFeedback = status == .confirmed
+            ? "You're in! Spot confirmed. We'll remind you before start time."
+            : "The event is full — you're on the waitlist. We'll let you know if a spot opens."
     }
 
     private func attemptPublish() {
@@ -241,6 +273,139 @@ struct EventDetailView: View {
             Text("Hosted by \(event.createdByName.isEmpty ? "Me" : event.createdByName)")
                 .font(DesignSystem.Typography.captionMedium)
                 .foregroundStyle(DesignSystem.Colors.gray500)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+    }
+
+    private var statusBanner: some View {
+        Group {
+            switch event.status {
+            case .draft:
+                Text("Only you can see this draft. Publish from the ⋯ menu to make it discoverable or shareable.")
+            case .cancelled:
+                Text("This event was cancelled.")
+            case .completed:
+                Text("This event has ended.")
+            case .published:
+                EmptyView()
+            }
+        }
+        .font(DesignSystem.Typography.bodySmall)
+        .foregroundStyle(event.status == .draft ? DesignSystem.Colors.gray900 : DesignSystem.Colors.gray500)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, DesignSystem.Spacing.sm)
+    }
+
+    private var joinCard: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            if let reg = myRegistration {
+                Label(reg.status == .confirmed ? "You're in — spot confirmed" : "You're on the waitlist",
+                      systemImage: reg.status == .confirmed ? "checkmark.seal.fill" : "clock.badge.questionmark")
+                    .font(DesignSystem.Typography.labelLarge)
+                    .foregroundStyle(reg.status == .confirmed ? DesignSystem.Colors.mintAccent : DesignSystem.Colors.gray900)
+                if EventManager.isFull(event), reg.status == .confirmed {
+                    Text("This event is now full. You're safely confirmed.")
+                        .font(DesignSystem.Typography.bodySmall)
+                        .foregroundStyle(DesignSystem.Colors.gray500)
+                }
+                Button(role: .destructive) {
+                    EventManager.leave(event, name: myName, context: context)
+                } label: {
+                    Label("Leave Event", systemImage: "arrow.uturn.backward")
+                        .font(DesignSystem.Typography.labelLarge)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            } else {
+                Label("Join this event", systemImage: "person.badge.plus")
+                    .font(DesignSystem.Typography.labelLarge)
+                    .foregroundStyle(DesignSystem.Colors.gray900)
+                FeeBreakdownLine(event: event)
+                Text("You'll confirm entry and fee details next. Payment is a mock in Phase 3 — Apple In-App Purchase arrives in Phase 4.")
+                    .font(DesignSystem.Typography.captionMedium)
+                    .foregroundStyle(DesignSystem.Colors.gray500)
+                Button {
+                    showingJoin = true
+                } label: {
+                    Label(EventManager.isFull(event) ? "Join Waitlist" : "Join Event", systemImage: "hand.tap")
+                        .font(DesignSystem.Typography.labelLarge)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PrimaryButtonStyle())
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+    }
+
+    private var ownerManageCard: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            Label("Organiser", systemImage: "person.2.badge.gearshape")
+                .font(DesignSystem.Typography.labelLarge)
+                .foregroundStyle(DesignSystem.Colors.gray900)
+            Text("\(EventManager.confirmedCount(event)) confirmed · \(EventManager.waitlistCount(event)) waitlisted · capacity \(event.maxPlayers)")
+                .font(DesignSystem.Typography.bodySmall)
+                .foregroundStyle(DesignSystem.Colors.gray500)
+            if event.status == .published {
+                Button {
+                    showingEdit = true
+                } label: {
+                    Label("Edit Event Details", systemImage: "pencil")
+                        .font(DesignSystem.Typography.labelLarge)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+    }
+
+    private var rosterCard: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            HStack {
+                Label("Roster", systemImage: "person.3")
+                    .font(DesignSystem.Typography.labelLarge)
+                    .foregroundStyle(DesignSystem.Colors.gray900)
+                Spacer()
+                Text("\(EventManager.joinedRoster(event).count)/\(event.maxPlayers)")
+                    .font(DesignSystem.Typography.labelMedium)
+                    .foregroundStyle(DesignSystem.Colors.gray500)
+            }
+            let roster = EventManager.joinedRoster(event)
+            if roster.isEmpty {
+                Text("No players yet.")
+                    .font(DesignSystem.Typography.bodySmall)
+                    .foregroundStyle(DesignSystem.Colors.gray500)
+            } else {
+                ForEach(roster) { reg in
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Circle()
+                            .fill(reg.status == .confirmed ? DesignSystem.Colors.mintAccent : DesignSystem.Colors.warning)
+                            .frame(width: 8, height: 8)
+                        Text(reg.playerName)
+                            .font(DesignSystem.Typography.bodySmall)
+                            .foregroundStyle(DesignSystem.Colors.gray900)
+                        Spacer()
+                        Text(reg.status == .confirmed ? "In" : "Waitlist")
+                            .font(DesignSystem.Typography.captionMedium)
+                            .foregroundStyle(DesignSystem.Colors.gray500)
+                        if isOwner, reg.playerName != event.createdByName {
+                            Button {
+                                EventManager.cancelRegistration(reg, context: context)
+                            } label: {
+                                Image(systemName: "xmark.circle")
+                                    .foregroundStyle(DesignSystem.Colors.gray500)
+                            }
+                            .accessibilityLabel("Remove \(reg.playerName)")
+                        }
+                    }
+                }
+                if EventManager.waitlistCount(event) > 0 {
+                    Text("We notify the next waitlisted player atomically when a spot opens (Phase 4).")
+                        .font(DesignSystem.Typography.captionMedium)
+                        .foregroundStyle(DesignSystem.Colors.gray500)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
@@ -375,6 +540,7 @@ struct CreateEventWizard: View {
     @State private var stepError: String?
     @State private var publishError: String?
     @State private var showingPublishError = false
+    @State private var showingMapPicker = false
 
     private let maxSteps = 5
 
@@ -426,6 +592,16 @@ struct CreateEventWizard: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(publishError ?? "")
+            }
+            .sheet(isPresented: $showingMapPicker) {
+                LocationPickerMap(
+                    initialLatitude: config.latitude,
+                    initialLongitude: config.longitude
+                ) { lat, lon in
+                    config.latitude = lat
+                    config.longitude = lon
+                }
+                .presentationDetents([.large])
             }
         }
     }
@@ -554,6 +730,21 @@ struct CreateEventWizard: View {
             WizardField(label: "Location (label)") {
                 TextField("Whitby Tennis Club, Court 1", text: $config.location)
                     .textFieldStyle(.roundedBorder)
+            }
+            WizardField(label: "Map pin") {
+                Button {
+                    showingMapPicker = true
+                } label: {
+                    HStack {
+                        Image(systemName: config.latitude == nil ? "mappin.slash" : "mappin.and.ellipse")
+                        Text(config.latitude == nil ? "Set location on map" : "Map pin set")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                    }
+                    .font(DesignSystem.Typography.bodyMedium)
+                    .foregroundStyle(DesignSystem.Colors.gray900)
+                }
             }
             WizardField(label: "Capacity") {
                 Stepper(value: $config.maxPlayers, in: 2...128) {
@@ -855,6 +1046,28 @@ struct WizardField<Content: View>: View {
 }
 
 /// Line-item breakdown shown on detail pages and in the wizard.
+/// Compact one-line fee summary used inside the join card.
+struct FeeBreakdownLine: View {
+    let event: Event
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.xxs) {
+            Image(systemName: "dollarsign.circle")
+                .foregroundStyle(DesignSystem.Colors.mintAccent)
+            Text(feeLine)
+                .font(DesignSystem.Typography.bodySmall)
+                .foregroundStyle(DesignSystem.Colors.gray900)
+        }
+    }
+
+    private var feeLine: String {
+        if event.totalCents > 0 {
+            return "\(EventFees.currencyString(event.totalCents)) total — \(EventFees.currencyString(event.entryFeeCents)) entry + \(EventFees.currencyString(event.convenienceFeeCents)) convenience fee"
+        }
+        return "Free entry"
+    }
+}
+
 struct FeeBreakdownList: View {
     let event: Event?
     let entryCents: Int64

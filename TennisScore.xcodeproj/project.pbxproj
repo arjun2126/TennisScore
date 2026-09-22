@@ -44,6 +44,8 @@
 		34E9AC00000000000000B101 /* TennisScore/Vantage/EventModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A101 /* TennisScore/Vantage/EventModels.swift */; };
 		34E9AC00000000000000B102 /* TennisScore/Vantage/EventManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A102 /* TennisScore/Vantage/EventManager.swift */; };
 		34E9AC00000000000000B103 /* TennisScore/Vantage/EventViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A103 /* TennisScore/Vantage/EventViews.swift */; };
+
+		34E9AC00000000000000B201 /* TennisScore/Vantage/EventBrowseViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E9AC00000000000000A201 /* TennisScore/Vantage/EventBrowseViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -121,6 +123,8 @@
 		34E9AC00000000000000A101 /* TennisScore/Vantage/EventModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventModels.swift; sourceTree = "<group>"; };
 		34E9AC00000000000000A102 /* TennisScore/Vantage/EventManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventManager.swift; sourceTree = "<group>"; };
 		34E9AC00000000000000A103 /* TennisScore/Vantage/EventViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventViews.swift; sourceTree = "<group>"; };
+
+		34E9AC00000000000000A201 /* TennisScore/Vantage/EventBrowseViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisScore/Vantage/EventBrowseViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -137,9 +141,10 @@
 				LeagueManager.swift,
 				LeagueModels.swift,
 				LeagueViews.swift,
-				"Vantage/EventManager.swift",
-				"Vantage/EventModels.swift",
-				"Vantage/EventViews.swift",
+				Vantage/EventManager.swift,
+				Vantage/EventModels.swift,
+				Vantage/EventViews.swift,
+				Vantage/EventBrowseViews.swift,
 			);
 			target = 34E314713054387E00696E97 /* TennisScore */;
 		};
@@ -241,6 +246,7 @@
 				34E9AC00000000000000A101 /* TennisScore/Vantage/EventModels.swift */,
 				34E9AC00000000000000A102 /* TennisScore/Vantage/EventManager.swift */,
 				34E9AC00000000000000A103 /* TennisScore/Vantage/EventViews.swift */,
+				34E9AC00000000000000A201 /* TennisScore/Vantage/EventBrowseViews.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -447,6 +453,7 @@
 				34E9AC00000000000000B101 /* TennisScore/Vantage/EventModels.swift in Sources */,
 				34E9AC00000000000000B102 /* TennisScore/Vantage/EventManager.swift in Sources */,
 				34E9AC00000000000000B103 /* TennisScore/Vantage/EventViews.swift in Sources */,
+				34E9AC00000000000000B201 /* TennisScore/Vantage/EventBrowseViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
