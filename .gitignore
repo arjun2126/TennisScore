@@ -1,3 +1,26 @@
 # Personal / local-only artifacts
 JobSearch/
 iconikai-icon-pack.zip
+
+# Build products & generated folders
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+
+# macOS junk
+.DS_Store
+
+# Dependency caches
+Pods/
+.swiftpm/
+.build/
+
+# Secrets & local configuration (keys, tokens, credentials)
+.env
+.env.*
+*.pem
+*.key
+*.p8
+*.mobileprovision
+secrets/
