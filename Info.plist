@@ -31,5 +31,11 @@
 			</array>
 		</dict>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>TennisScore records your tennis workouts, including duration and energy burned, while you score matches.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>TennisScore saves your tennis workouts to the Health app when matches are scored.</string>
 </dict>
 </plist>
