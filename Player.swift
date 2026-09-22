@@ -23,6 +23,11 @@ final class Player {
     /// model container.
     @Relationship(deleteRule: .nullify) var inTournaments: [Tournament] = []
 
+    /// Season leagues this player is a member of. `League.roster` declares the
+    /// `@Relationship` inverse. Kept outside any `#if` guard for the same
+    /// schema-metadata reason documented above `inTournaments`.
+    @Relationship(deleteRule: .nullify) var leagues: [League] = []
+
     init(name: String) {
         self.name = name
         self.dateCreated = .now
