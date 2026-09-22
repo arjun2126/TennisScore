@@ -542,6 +542,183 @@ struct MatchDisputeSheet: View {
     }
 }
 
+// MARK: - Moderation queue (Phase 7)
+
+/// Local admin queue: every public-entity report lands here for review
+/// (Guideline 1.2). Actions resolve/dismiss and suspend (cancel) the reported
+/// event so it leaves Explore. Production escalates to a server admin; this
+/// MVP ships the local queue documented in the spec.
+struct ModerationQueueView: View {
+    @Environment(\.modelContext) private var context
+    @Query(sort: \EventReport.createdAt, order: .reverse) private var reports: [EventReport]
+    @Query private var events: [Event]
+
+    @State private var filter: EventReportStatus? = .pending
+
+    var body: some View {
+        ZStack {
+            DesignSystem.Colors.courtDark.ignoresSafeArea()
+            VStack(spacing: DesignSystem.Spacing.md) {
+                filterChips
+                if filtered.isEmpty {
+                    emptyState
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: DesignSystem.Spacing.sm) {
+                            ForEach(filtered) { report in
+                                reportCard(report)
+                            }
+                        }
+                        .padding(.horizontal, DesignSystem.Spacing.lg)
+                        .padding(.bottom, DesignSystem.Spacing.lg)
+                    }
+                }
+            }
+            .padding(.top, DesignSystem.Spacing.sm)
+        }
+        .navigationTitle("Moderation")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var filtered: [EventReport] {
+        filter == nil ? reports : reports.filter { $0.status == filter }
+    }
+
+    private var filterChips: some View {
+        HStack(spacing: DesignSystem.Spacing.xs) {
+            ForEach([EventReportStatus?(nil), .pending, .resolved, .dismissed], id: \.self) { status in
+                Button {
+                    filter = status
+                } label: {
+                    Text(label(for: status))
+                        .font(DesignSystem.Typography.labelSmall)
+                        .foregroundStyle(filter == status ? DesignSystem.Colors.courtDark : DesignSystem.Colors.gray500)
+                        .padding(.horizontal, DesignSystem.Spacing.sm)
+                        .padding(.vertical, DesignSystem.Spacing.xxs)
+                        .background(filter == status ? DesignSystem.Colors.mintAccent : DesignSystem.Colors.glassBackground)
+                        .clipShape(Capsule())
+                }
+            }
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: DesignSystem.Spacing.md) {
+            Image(systemName: "checkmark.shield")
+                .font(.system(size: 48))
+                .foregroundStyle(DesignSystem.Colors.mintAccent)
+            Text("Queue clear")
+                .font(DesignSystem.Typography.headlineMedium)
+                .bold()
+                .foregroundStyle(.white)
+            Text(emptyQueueLine)
+                .font(DesignSystem.Typography.bodySmall)
+                .foregroundStyle(DesignSystem.Colors.gray500)
+        }
+        .padding(DesignSystem.Spacing.xl)
+        .frame(maxWidth: .infinity)
+    }
+
+    private var emptyQueueLine: String {
+        guard let filter else { return "No reports to review." }
+        return "No \(filter.label.lowercased()) reports to review."
+    }
+
+    private func reportCard(_ report: EventReport) -> some View {
+        let reportedEvent = event(for: report)
+        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+            HStack {
+                statusPill(report)
+                Spacer()
+                Text(report.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(DesignSystem.Typography.captionSmall)
+                    .foregroundStyle(DesignSystem.Colors.gray500)
+            }
+            Text(report.eventName)
+                .font(DesignSystem.Typography.headlineSmall)
+                .bold()
+                .foregroundStyle(.white)
+            Text(report.reason)
+                .font(DesignSystem.Typography.bodySmall)
+                .foregroundStyle(DesignSystem.Colors.gray500)
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Label(report.reporterName, systemImage: "flag.fill")
+                    .font(DesignSystem.Typography.captionSmall)
+                    .foregroundStyle(DesignSystem.Colors.gray500)
+                Spacer()
+                if let reportedEvent {
+                    Button {
+                        EventManager.suspendEvent(reportedEvent, context: context)
+                    } label: {
+                        Text(reportedEvent.status == .cancelled ? "Suspended" : "Suspend")
+                    }
+                    .font(DesignSystem.Typography.labelSmall)
+                    .foregroundStyle(DesignSystem.Colors.error)
+                    .disabled(reportedEvent.status == .cancelled)
+                }
+                Button {
+                    EventManager.dismissReport(report, context: context)
+                } label: {
+                    Text(report.status == .dismissed ? "Reopen" : "Dismiss")
+                }
+                .font(DesignSystem.Typography.labelSmall)
+                .foregroundStyle(DesignSystem.Colors.gray500)
+                Button {
+                    EventManager.resolveReport(report, context: context)
+                } label: {
+                    Text(report.status == .resolved ? "Reopen" : "Resolve")
+                }
+                .font(DesignSystem.Typography.labelSmall)
+                .foregroundStyle(DesignSystem.Colors.mintAccent)
+            }
+        }
+        .padding(DesignSystem.Spacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DesignSystem.Colors.glassBackground)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.Radius.lg)
+                .stroke(DesignSystem.Colors.glassBorder, lineWidth: 1)
+        )
+    }
+
+    private func statusPill(_ report: EventReport) -> some View {
+        let color: Color = {
+            switch report.status {
+            case .pending: return DesignSystem.Colors.warning
+            case .resolved: return DesignSystem.Colors.mintAccent
+            case .dismissed: return DesignSystem.Colors.gray500
+            }
+        }()
+        return Text(report.status.label.uppercased())
+            .font(DesignSystem.Typography.captionSmall)
+            .bold()
+            .padding(.horizontal, DesignSystem.Spacing.xs)
+            .padding(.vertical, 1)
+            .background(color.opacity(0.2))
+            .foregroundStyle(color)
+            .clipShape(Capsule())
+    }
+
+    private func event(for report: EventReport) -> Event? {
+        events.first { $0.shareToken == report.eventToken }
+    }
+
+    private func label(for status: EventReportStatus?) -> String {
+        status?.label ?? "All"
+    }
+}
+
+extension EventReportStatus {
+    var label: String {
+        switch self {
+        case .pending: return "Pending"
+        case .resolved: return "Resolved"
+        case .dismissed: return "Dismissed"
+        }
+    }
+}
+
 // MARK: - Join / report sheets
 
 struct JoinEventSheet: View {

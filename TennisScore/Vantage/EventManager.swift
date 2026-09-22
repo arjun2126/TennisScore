@@ -374,6 +374,25 @@ enum EventManager {
         context.insert(report)
         try? context.save()
     }
+
+    // MARK: Moderation queue (Phase 7)
+
+    static func resolveReport(_ report: EventReport, context: ModelContext) {
+        report.statusRaw = report.status == .resolved ? EventReportStatus.pending.rawValue : EventReportStatus.resolved.rawValue
+        try? context.save()
+    }
+
+    static func dismissReport(_ report: EventReport, context: ModelContext) {
+        report.statusRaw = report.status == .dismissed ? EventReportStatus.pending.rawValue : EventReportStatus.dismissed.rawValue
+        try? context.save()
+    }
+
+    /// Ban (suspend) the reported event: cancels it so it vanishes from Explore
+    /// and no new joins/checkouts are possible. Reports stay on file.
+    static func suspendEvent(_ event: Event, context: ModelContext) {
+        event.statusRaw = EventStatus.cancelled.rawValue
+        try? context.save()
+    }
 }
 
 // MARK: - Live standings (pure, testable)

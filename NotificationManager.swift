@@ -85,6 +85,13 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
     }
 
+    /// Account deletion support: clears everything this app ever scheduled,
+    /// pending and already delivered alike.
+    func removeAllNotifications() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+    }
+
     private func scheduleWeeklyReminder(id: String, weekday: Int, hour: Int, title: String, body: String) {
         let content = UNMutableNotificationContent()
         content.title = title
