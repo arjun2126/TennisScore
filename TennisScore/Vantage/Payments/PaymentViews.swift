@@ -90,6 +90,14 @@ struct CreatorDashboardView: View {
             Text("Apple holds all purchase revenue in your developer account. This screen tracks what you owe each creator (their entry-fee share); you pay manually via PayPal. Nothing moves money in-app (Cart-Before-Cat).")
                 .font(DesignSystem.Typography.captionMedium)
                 .foregroundStyle(DesignSystem.Colors.gray500)
+            if !owned.isEmpty {
+                ShareLink(item: settlementCSVURL(), preview: SharePreview("vantage-settlement.csv")) {
+                    Label("Export Settlement CSV", systemImage: "square.and.arrow.up")
+                        .font(DesignSystem.Typography.labelLarge)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
@@ -216,6 +224,63 @@ struct CreatorDashboardView: View {
             }
         }
         toast = "Logged payout entries. Apple holds the money — you send creators via PayPal as normal."
+    }
+
+    // MARK: - Settlement CSV (Phase 8)
+
+    private var settlementRows: [SettlementRow] {
+        owned.flatMap { event -> [SettlementRow] in
+            var rows: [SettlementRow] = []
+            for pair in EventManager.purchasedRegistrations(event) {
+                let registration = pair.registration
+                let record = pair.record
+                if record.entryCents > 0 {
+                    rows.append(SettlementRow(
+                        date: registration.joinedAt,
+                        eventToken: event.shareToken,
+                        eventName: event.name,
+                        kind: "entry",
+                        playerName: registration.playerName,
+                        amountCents: record.entryCents,
+                        transactionID: record.appleTransactionID,
+                        status: record.status.rawValue
+                    ))
+                }
+                if record.feeCents > 0 {
+                    rows.append(SettlementRow(
+                        date: registration.joinedAt,
+                        eventToken: event.shareToken,
+                        eventName: event.name,
+                        kind: "platform_fee",
+                        playerName: registration.playerName,
+                        amountCents: record.feeCents,
+                        transactionID: record.appleTransactionID,
+                        status: record.status.rawValue
+                    ))
+                }
+            }
+            for payout in payouts where payout.eventToken == event.shareToken {
+                rows.append(SettlementRow(
+                    date: payout.createdAt,
+                    eventToken: payout.eventToken,
+                    eventName: payout.eventName,
+                    kind: "payout",
+                    playerName: payout.recipient,
+                    amountCents: payout.amountCents,
+                    transactionID: "payout-\(payout.persistentModelID.hashValue)",
+                    status: payout.status.rawValue
+                ))
+            }
+            return rows
+        }
+    }
+
+    private func settlementCSVURL() -> URL {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("vantage-settlement.csv")
+        if let data = EventSettlementCSV.build(rows: settlementRows).data(using: .utf8) {
+            try? data.write(to: file)
+        }
+        return file
     }
 }
 

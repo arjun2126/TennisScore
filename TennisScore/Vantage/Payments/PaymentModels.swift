@@ -26,6 +26,53 @@ enum EventPayments {
     }
 }
 
+// MARK: - Settlement CSV export (Phase 8, pure)
+
+/// One ledger line for the settlement CSV. `kind`: "entry" (creator-owed
+/// entry-fee share), "fee" (platform convenience fee), or "payout" (manual
+/// transfer logged for a creator).
+struct SettlementRow: Equatable {
+    let date: Date
+    let eventToken: String
+    let eventName: String
+    let kind: String
+    let playerName: String
+    let amountCents: Int64
+    let transactionID: String
+    let status: String
+}
+
+nonisolated enum EventSettlementCSV {
+    static let header = "date,event,kind,player,amount_usd,transaction_id,status"
+
+    /// Builds a settlement CSV (Path 1 manual settlement: Apple holds the money,
+    /// this file is the creator-owed ledger you reconcile against PayPal).
+    /// Pure so the harness can assert exact output.
+    static func build(rows: [SettlementRow], date: Date = .now) -> String {
+        let lines = [header] + rows.map { row in
+            [
+                row.date.formatted(.iso8601),
+                quote(row.eventName),
+                quote(row.kind),
+                quote(row.playerName),
+                EventFees.dollars(row.amountCents),
+                quote(row.transactionID),
+                quote(row.status),
+            ].joined(separator: ",")
+        }
+        return lines.joined(separator: "\n") + "\n"
+    }
+
+    /// RFC-4180-ish field quoting: wrap in quotes when the field contains a
+    /// comma, quote, or newline; double any embedded quotes.
+    static func quote(_ field: String) -> String {
+        guard field.contains(",") || field.contains("\"") || field.contains("\n") else {
+            return field
+        }
+        return "\"" + field.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+    }
+}
+
 // MARK: - Payment ledger (Phase 4)
 
 enum PaymentStatus: String, Codable {

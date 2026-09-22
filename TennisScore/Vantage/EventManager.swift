@@ -34,6 +34,11 @@ enum EventFees {
         formatter.locale = Locale(identifier: "en_US")
         return formatter.string(from: NSNumber(value: Double(cents) / 100.0)) ?? String(format: "$%.2f", Double(cents) / 100.0)
     }
+
+    /// Settlement CSV amount (fixed two decimals, no grouping).
+    nonisolated static func dollars(_ cents: Int64) -> String {
+        String(format: "%.2f", Double(cents) / 100.0)
+    }
 }
 
 /// Publish-time governance. Encodes: public events 18+ only; minors (13–17)
