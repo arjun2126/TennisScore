@@ -83,7 +83,7 @@ final class TournamentManager {
         // Rounds 2…depth: empty shells (nil slots). Winners drop in as they emerge.
         if depth > 1 {
             for round in 2...depth {
-                let fixturesInRound = size >> (round - 1)
+                let fixturesInRound = size >> round
                 for position in 0..<fixturesInRound {
                     let fixture = TournamentMatch(round: round, position: position)
                     fixture.tournament = tournament
@@ -94,7 +94,7 @@ final class TournamentManager {
 
         // Auto-resolve round-1 byes: a lone player walks over into round 2 now.
         // Repeatedly hoisting the walkover handles a bracket with layered byes.
-        for `round` in 1...(depth - 1) {
+        for `round` in 1..<depth {
             for fixture in tournament.matches where fixture.round == `round` && fixture.position < (size >> `round`) {
                 applyByeWalkovers(from: fixture, tournament: tournament)
             }
@@ -106,11 +106,12 @@ final class TournamentManager {
         var position = 0
         for roundPairs in rounds {
             for pair in roundPairs {
+                guard let partner = pair.1 else { continue } // odd field: bye = rest, no fixture
                 let fixture = TournamentMatch(
                     round: 1,
                     position: position,
                     playerOne: tournament.entries[pair.0],
-                    playerTwo: pair.1.map { tournament.entries[$0] }
+                    playerTwo: tournament.entries[partner]
                 )
                 fixture.tournament = tournament
                 context.insert(fixture)

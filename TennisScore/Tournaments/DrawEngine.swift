@@ -83,6 +83,7 @@ enum DrawEngine {
     /// `count` entrants; with an odd count one "bye" (the `nil` side) rests
     /// each round. Returns per-round pairs as (indexA, indexB?).
     static func roundRobinRounds(count: Int) -> [[(Int, Int?)]] {
+        guard count > 1 else { return [] }
         let n = count
         let total = n % 2 == 0 ? n : n + 1
         var labels: [Int?] = (0..<n).map { $0 }
@@ -94,7 +95,11 @@ enum DrawEngine {
             for i in 0..<(total / 2) {
                 let a = labels[i]
                 let b = labels[total - 1 - i]
-                roundPairs.append((a!, b))
+                if let a {
+                    roundPairs.append((a, b))
+                } else if let b {
+                    roundPairs.append((b, nil))
+                }
             }
             allRounds.append(roundPairs)
 
