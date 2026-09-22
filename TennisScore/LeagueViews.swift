@@ -54,6 +54,9 @@ struct LeagueDetailView: View {
     let league: League
 
     @State private var scoringMatch: LeagueMatch?
+    @State private var shareURL: URL?
+    @State private var isPreparingShare = false
+    @State private var showingShare = false
 
     var body: some View {
         ScrollView {
@@ -67,10 +70,43 @@ struct LeagueDetailView: View {
         .background(Color.courtDark)
         .navigationTitle(league.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    prepareShare()
+                } label: {
+                    Image(systemName: isPreparingShare ? "hourglass" : "square.and.arrow.up")
+                        .foregroundStyle(Color.mintAccent)
+                }
+                .disabled(isPreparingShare)
+            }
+        }
         .sheet(item: $scoringMatch) { match in
             LeagueScoreSheet(match: match)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showingShare) {
+            if let shareURL {
+                ShareSheet(activityItems: [shareURL])
+            }
+        }
+    }
+
+    private func prepareShare() {
+        guard !isPreparingShare else { return }
+        isPreparingShare = true
+        Task {
+            do {
+                let url = try await ExportManager.prepareShare(for: league)
+                await MainActor.run {
+                    self.shareURL = url
+                    self.isPreparingShare = false
+                    self.showingShare = true
+                }
+            } catch {
+                await MainActor.run { self.isPreparingShare = false }
+            }
         }
     }
 

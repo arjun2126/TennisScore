@@ -163,3 +163,46 @@ final class LeagueMatch {
         self.statusRaw = LeagueMatchStatus.pending.rawValue
     }
 }
+
+// MARK: - League Export (PDF pipeline)
+
+/// Plain Sendable snapshot of a league's live standings, taken on the MainActor.
+/// Rendering (PDF) and tests consume this — never the model directly.
+struct LeagueExportSnapshot: Sendable {
+    struct Row: Sendable {
+        let rank: Int
+        let name: String
+        let wins: Int
+        let losses: Int
+        let points: Int
+        let setsWon: Int
+        let setsLost: Int
+    }
+
+    let leagueName: String
+    let dateLine: String
+    let playerCount: Int
+    let weeks: Int
+    let rows: [Row]
+
+    init(league: League) {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        leagueName = league.name
+        dateLine = formatter.string(from: league.dateCreated)
+        playerCount = league.roster.count
+        weeks = league.weeks
+        rows = league.standings.enumerated().map { index, row in
+            Row(
+                rank: index + 1,
+                name: row.player.name,
+                wins: row.wins,
+                losses: row.losses,
+                points: row.points,
+                setsWon: row.setsWon,
+                setsLost: row.setsLost
+            )
+        }
+    }
+}
